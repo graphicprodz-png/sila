@@ -10,7 +10,10 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -31,6 +34,8 @@ import java.util.Locale;
  */
 public class MainActivity extends Activity {
     private static final int REQ_MIC = 1;
+    private static final int REQ_FILE = 2;
+    private ValueCallback<Uri[]> fileCallback;
     private static final String HOST = "appassets.androidplatform.net";
 
     private WebView web;
@@ -75,6 +80,22 @@ public class MainActivity extends Activity {
             }
         });
 
+        // اختيار صورة من المعرض (لصور العائلة)
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+                if (fileCallback != null) fileCallback.onReceiveValue(null);
+                fileCallback = callback;
+                try {
+                    startActivityForResult(params.createIntent(), REQ_FILE);
+                } catch (Exception e) {
+                    fileCallback = null;
+                    return false;
+                }
+                return true;
+            }
+        });
+
         web.addJavascriptInterface(new Bridge(), "AndroidBridge");
 
         tts = new TextToSpeech(this, status -> ttsReady = (status == TextToSpeech.SUCCESS));
@@ -92,6 +113,14 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void stopListening() {
             runOnUiThread(() -> { if (recognizer != null) recognizer.cancel(); });
+        }
+
+        @JavascriptInterface
+        public void keepAwake(boolean on) {
+            runOnUiThread(() -> {
+                if (on) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            });
         }
 
         @JavascriptInterface
@@ -198,6 +227,15 @@ public class MainActivity extends Activity {
         } else {
             emit("error", "not-allowed", false);
             emit("end", null, false);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_FILE && fileCallback != null) {
+            fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
+            fileCallback = null;
         }
     }
 

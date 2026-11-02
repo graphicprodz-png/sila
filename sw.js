@@ -1,5 +1,5 @@
 // Service worker: يجعل التطبيق يفتح دون إنترنت (القاموس ولوحة أمي تعمل دون اتصال)
-const CACHE = "sila-v4";
+const CACHE = "sila-v5";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png",
   "./fonts/ge-ss-two-light.otf", "./fonts/ge-ss-two-medium.otf", "./fonts/ge-ss-two-bold.otf"];

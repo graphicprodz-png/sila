@@ -3,48 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>صِلة — محادثة مرئية للصم</title>
+<title>صِلة — محادثة مرئية للصم والبكم</title>
 <meta name="theme-color" content="#0f766e">
-<meta name="description" content="يحوّل الكلام إلى صور متحركة بسيطة للتواصل مع الأشخاص الصم">
+<meta name="description" content="يحوّل الكلام إلى صور متحركة بسيطة للتواصل مع الأشخاص الصم والبكم">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="صِلة">
 <style>
-@font-face{font-family:"GE SS Two";src:url("fonts/ge-ss-two-light.otf") format("opentype");font-weight:300;font-style:normal;font-display:swap}
-@font-face{font-family:"GE SS Two";src:url("fonts/ge-ss-two-medium.otf") format("opentype");font-weight:500;font-style:normal;font-display:swap}
-@font-face{font-family:"GE SS Two";src:url("fonts/ge-ss-two-bold.otf") format("opentype");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:"GE SS Two";src:url("fonts/ge-ss-two-light.otf") format("opentype");font-weight:300;font-style:normal;font-display:swap;unicode-range:U+0000-002F,U+003A-10FFFF}
+@font-face{font-family:"GE SS Two";src:url("fonts/ge-ss-two-medium.otf") format("opentype");font-weight:500;font-style:normal;font-display:swap;unicode-range:U+0000-002F,U+003A-10FFFF}
+@font-face{font-family:"GE SS Two";src:url("fonts/ge-ss-two-bold.otf") format("opentype");font-weight:700;font-style:normal;font-display:swap;unicode-range:U+0000-002F,U+003A-10FFFF}
 :root{
   --bg:#f6f4ef; --panel:#ffffff; --ink:#1d2433; --muted:#6b7280; --line:#e5e1d8;
   --primary:#0f766e; --primary-ink:#ffffff; --accent:#f59e0b; --danger:#dc2626;
-  --heard:#e6f4f1; --me:#fff4dc; --card:#fbfaf7;
+  --heard:#e6f4f1; --me:#fff4dc; --card:#fbfaf7; --soft:#f0ede6;
   --fs:1;
 }
 body.contrast{
   --bg:#000; --panel:#111; --ink:#fff; --muted:#d1d5db; --line:#444;
-  --primary:#fde047; --primary-ink:#000; --heard:#1e293b; --me:#3b2f0b; --card:#1a1a1a;
+  --primary:#fde047; --primary-ink:#000; --heard:#1e293b; --me:#3b2f0b; --card:#1a1a1a; --soft:#222;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%}
-body{font-family:"GE SS Two",system-ui,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--ink);
+html,body{margin:0;min-height:100%}
+body{font-family:"GE SS Two","Segoe UI",Roboto,Arial,system-ui,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--ink);
   font-size:calc(17px * var(--fs));line-height:1.5;font-weight:500;transition:box-shadow .2s}
 body.flash{box-shadow:inset 0 0 0 10px var(--accent)}
-button{font-family:inherit;font-size:inherit;cursor:pointer;color:inherit}
-.app{max-width:1100px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px;min-height:100%}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+.app{max-width:1100px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px}
 
 header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.5em}
-.logo .mark{width:44px;height:44px;border-radius:14px;background:var(--primary);color:var(--primary-ink);
-  display:grid;place-items:center;font-size:24px}
+.logo .mark{width:44px;height:44px;border-radius:14px;background:var(--primary);color:var(--primary-ink);display:grid;place-items:center;font-size:24px}
 .logo small{display:block;font-size:.5em;font-weight:300;color:var(--muted)}
 .tools{margin-inline-start:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font-size:.85em}
 .chip[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
-select.chip{appearance:auto}
 
-.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:var(--panel);padding:6px;border-radius:16px;border:1px solid var(--line)}
-.tab{border:0;background:transparent;padding:12px 8px;border-radius:12px;font-weight:700;font-size:1em}
+.tabs{display:flex;gap:6px;background:var(--panel);padding:6px;border-radius:16px;border:1px solid var(--line)}
+.tab{flex:1;border:0;background:transparent;padding:12px 8px;border-radius:12px;font-weight:700}
 .tab[aria-selected="true"]{background:var(--primary);color:var(--primary-ink)}
 .tab span{display:block;font-size:1.4em}
 
@@ -52,83 +52,53 @@ select.chip{appearance:auto}
 .view.active{display:flex}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px}
 .panel h2{margin:0 0 8px;font-size:1em;color:var(--muted);font-weight:700}
+.small{font-size:.85em;color:var(--muted);font-weight:300}
 
 /* LISTEN */
 .mic-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
-.mic{width:92px;height:92px;border-radius:50%;border:0;background:var(--primary);color:var(--primary-ink);
-  font-size:40px;display:grid;place-items:center;flex:none;position:relative}
+.mic{width:92px;height:92px;border-radius:50%;border:0;background:var(--primary);color:var(--primary-ink);font-size:40px;display:grid;place-items:center;flex:none;position:relative}
 .mic.on{background:var(--danger);color:#fff}
 .mic.on::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:4px solid var(--danger);animation:pulse 1.2s infinite}
 @keyframes pulse{0%{transform:scale(.9);opacity:1}100%{transform:scale(1.25);opacity:0}}
 .status{flex:1;min-width:200px}
 .status b{font-size:1.15em;display:block}
-.status .hint{color:var(--muted);font-weight:300;font-size:.9em}
+.status .hint{color:var(--muted);font-size:.9em;font-weight:300}
 .live-text{font-size:1.7em;font-weight:700;min-height:1.6em;margin:10px 0 4px;word-break:break-word}
 .live-text .interim{color:var(--muted);font-weight:300}
-.strip{display:flex;flex-wrap:wrap;gap:8px;min-height:120px;align-items:flex-start;direction:rtl}
-.pic{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 10px;min-width:86px;
-  text-align:center;animation:pop .25s ease}
-.pic .e{font-size:calc(46px * var(--fs));line-height:1.1;display:block}
-.pic .w{font-size:.9em;font-weight:700}
-.pic.word{display:flex;align-items:center;justify-content:center;min-height:86px;font-size:1.15em;font-weight:700;color:var(--muted);border-style:dashed}
-.pic.kind-feel{border-color:#f472b6}.pic.kind-need{border-color:#60a5fa}.pic.kind-q{border-color:#a78bfa}
-.pic.kind-urgent{border-color:var(--danger);background:#fee2e2;color:#111}
-@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:none;opacity:1}}
+.phrases{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px}
+.phrases .chip{white-space:nowrap;font-size:.95em;padding:8px 14px}
+
 .type-row{display:flex;gap:8px;margin-top:10px}
-.type-row input{flex:1;font-weight:300;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;background:var(--card);color:var(--ink)}
+.type-row input{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--card);font-weight:300}
 .btn{border:0;border-radius:12px;padding:12px 16px;font-weight:700;background:var(--primary);color:var(--primary-ink)}
 .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
 .btn.danger{background:var(--danger);color:#fff}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.actions .btn{flex:1;min-width:120px}
 .notice{background:#fff7ed;border:1px solid #fdba74;color:#7c2d12;border-radius:12px;padding:10px 12px;font-size:.9em;display:none}
 .notice.show{display:block}
+.ai-badge{font-size:.75em;background:var(--accent);color:#000;border-radius:999px;padding:2px 8px;margin-inline-start:6px;vertical-align:middle}
 
-/* SPEAK */
-.sentence{display:flex;flex-wrap:wrap;gap:6px;min-height:96px;border:2px dashed var(--line);border-radius:14px;padding:8px;align-items:center}
-.sentence:empty::before{font-weight:300;content:"اضغط على الصور بالأسفل لتكوين جملتك…";color:var(--muted)}
-.sentence .pic{cursor:pointer;min-width:74px;padding:6px}
-.sentence .pic .e{font-size:calc(36px * var(--fs))}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.actions .btn{flex:1;min-width:120px;font-size:1.05em}
-.cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
-.cats .chip{white-space:nowrap;font-size:.95em;padding:8px 14px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px;margin-top:10px}
-.grid button{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center}
-.grid button:active{transform:scale(.95)}
-.grid .e{font-size:calc(40px * var(--fs));display:block;line-height:1.15}
-.grid .w{font-size:.9em;font-weight:700}
-.sos{width:100%;font-size:1.2em;padding:16px}
-
-/* HISTORY */
-.log{display:flex;flex-direction:column;gap:10px}
-.msg{max-width:88%;border-radius:16px;padding:10px 12px}
-.msg.heard{background:var(--heard);align-self:flex-start}
-.msg.me{background:var(--me);align-self:flex-end}
-.msg .who{font-size:.8em;color:var(--muted);font-weight:700}
-.msg .t{font-size:1.1em;font-weight:700;margin:2px 0 6px}
-.msg .mini{display:flex;flex-wrap:wrap;gap:4px;font-size:1.6em}
-.empty{color:var(--muted);font-weight:300;text-align:center;padding:30px}
-
-/* SHOW SCREEN */
-.big{position:fixed;inset:0;background:var(--primary);color:var(--primary-ink);display:none;flex-direction:column;
-  align-items:center;justify-content:center;padding:24px;text-align:center;z-index:50;gap:20px}
-.big.show{display:flex}
-.big .be{font-size:min(18vw,120px);line-height:1.1}
-.big .bt{font-size:min(9vw,64px);font-weight:700}
-.big .close{position:absolute;top:14px;left:14px;background:rgba(0,0,0,.2);border:0;border-radius:12px;padding:10px 14px;color:inherit}
-.big.sosmode{background:var(--danger);color:#fff;animation:blink 1s infinite}
-@keyframes blink{50%{filter:brightness(1.3)}}
-
-/* STORY STAGE: الصور المتحركة لأمي */
+/* STORY */
 .stage{position:relative;min-height:230px;border-radius:18px;background:linear-gradient(180deg,#fffaf0,#fdf1d8);
   display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;padding:16px;overflow:hidden;cursor:pointer}
 body.contrast .stage{background:#111}
-.stage .idle{color:var(--muted);font-weight:300;text-align:center}
+.stage .idle{color:var(--muted);text-align:center;font-weight:300}
 .stage .idle .e{font-size:64px;display:block;opacity:.5}
-.scene{display:flex;flex-direction:column;align-items:center;gap:4px}
+.scene{display:flex;flex-direction:column;align-items:center;gap:4px;transition:opacity .3s,transform .3s}
 .scene .e{font-size:calc(96px * var(--fs));line-height:1.1;display:inline-block}
+.scene img.e{width:calc(112px * var(--fs));height:calc(112px * var(--fs));border-radius:24px;object-fit:cover;border:4px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.18)}
 .scene .c{font-size:.95em;font-weight:700;color:var(--muted)}
-.scene.dim{opacity:.35;transform:scale(.8);transition:.3s}
-.hidecap .scene .c{display:none}
+.scene.dim{opacity:.35;transform:scale(.8)}
+.hidecap .scene .c,.hidecap .pic .w{display:none}
+/* ممثّل: وجه حقيقي + حركة */
+.actor{position:relative;display:inline-block;width:calc(120px * var(--fs));height:calc(150px * var(--fs))}
+.actor .body{position:absolute;inset:auto 0 0 0;text-align:center;font-size:calc(118px * var(--fs));line-height:1}
+.actor .face{position:absolute;top:0;left:50%;transform:translateX(-50%);width:calc(66px * var(--fs));height:calc(66px * var(--fs));
+  border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.25);z-index:2}
+.actor.badge{height:calc(130px * var(--fs))}
+.actor.badge .face{position:absolute;top:0;left:50%;transform:translateX(-50%);width:calc(112px * var(--fs));height:calc(112px * var(--fs));border-radius:24px}
+.actor.badge .act{position:absolute;bottom:0;inset-inline-start:-6px;font-size:calc(56px * var(--fs));z-index:3;filter:drop-shadow(0 3px 4px rgba(0,0,0,.25))}
 .a-bounce{animation:bounce 1s ease-in-out infinite}
 .a-slide{animation:slide 1.6s ease-in-out infinite}
 .a-slideback{animation:slideback 1.6s ease-in-out infinite}
@@ -142,131 +112,182 @@ body.contrast .stage{background:#111}
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
 @keyframes slide{0%{transform:translateX(40px)}50%{transform:translateX(-40px)}100%{transform:translateX(40px)}}
 @keyframes slideback{0%{transform:translateX(-40px)}50%{transform:translateX(40px)}100%{transform:translateX(-40px)}}
-@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px) rotate(-6deg)}75%{transform:translateX(8px) rotate(6deg)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes float{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-14px) rotate(3deg)}}
 @keyframes grow{0%,100%{transform:scale(.85)}50%{transform:scale(1.15)}}
 @keyframes wave{0%,100%{transform:rotate(0)}50%{transform:rotate(-25deg)}}
 @keyframes nod{0%,100%{transform:rotate(0)}50%{transform:rotate(12deg) translateY(4px)}}
-.ai-badge{font-size:.75em;background:var(--accent);color:#000;border-radius:999px;padding:2px 8px;margin-inline-start:6px;vertical-align:middle}
-details.settings summary{cursor:pointer;font-weight:700;color:var(--muted)}
-details.settings .type-row input{direction:ltr}
-.small{font-size:.85em;color:var(--muted);font-weight:300}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:none;opacity:1}}
+
+/* BOARD */
+.pic{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:6px 8px;min-width:74px;text-align:center;animation:pop .25s ease}
+.pic .e{font-size:calc(36px * var(--fs));line-height:1.1;display:block}
+.pic img.e{width:calc(44px * var(--fs));height:calc(44px * var(--fs));border-radius:10px;object-fit:cover;margin:0 auto}
+.pic .w{font-size:.85em;font-weight:700}
+.pic.word{display:flex;align-items:center;justify-content:center;min-height:70px;color:var(--muted);border-style:dashed}
+.sentence{display:flex;flex-wrap:wrap;gap:6px;min-height:96px;border:2px dashed var(--line);border-radius:14px;padding:8px;align-items:center}
+.sentence:empty::before{content:attr(data-empty);color:var(--muted);font-weight:300}
+.sentence .pic{cursor:pointer}
+.cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.cats .chip{white-space:nowrap;font-size:.95em;padding:8px 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px;margin-top:10px}
+.grid button{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center}
+.grid button:active{transform:scale(.95)}
+.grid .e{font-size:calc(40px * var(--fs));display:block;line-height:1.15}
+.grid img.e{width:calc(56px * var(--fs));height:calc(56px * var(--fs));border-radius:12px;object-fit:cover;margin:0 auto 2px}
+.grid .w{font-size:.9em;font-weight:700}
+.sos{width:100%;font-size:1.2em;padding:16px}
+
+/* HISTORY */
+.log{display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;border-radius:16px;padding:10px 12px}
+.msg.heard{background:var(--heard);align-self:flex-start}
+.msg.me{background:var(--me);align-self:flex-end}
+.msg .who{font-size:.8em;color:var(--muted);font-weight:700}
+.msg .t{font-size:1.1em;font-weight:700;margin:2px 0 6px}
+.msg .mini{font-size:1.6em}
+.empty{color:var(--muted);text-align:center;padding:30px;font-weight:300}
+
+/* OVERLAYS */
+.big{position:fixed;inset:0;background:var(--primary);color:var(--primary-ink);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;z-index:50;gap:18px}
+.big.show{display:flex}
 .big.storymode{background:#fffaf0;color:#1d2433}
+.big .be{font-size:min(18vw,120px);line-height:1.1}
+.big .bt{font-size:min(8vw,56px);font-weight:700}
+.big .bphone{font-size:min(7vw,44px);font-weight:700;direction:ltr;background:rgba(255,255,255,.18);border-radius:16px;padding:8px 18px;color:inherit;text-decoration:none}
+.big .close{position:absolute;top:14px;left:14px;background:rgba(0,0,0,.2);border:0;border-radius:12px;padding:10px 14px;color:inherit}
+.big.sosmode{background:var(--danger);color:#fff;animation:blink 1s infinite}
+@keyframes blink{50%{filter:brightness(1.3)}}
 .big .stage{background:transparent;min-height:60vh;width:100%}
 .big .scene .e{font-size:min(30vw,190px)}
+.big .scene img.e{width:min(42vw,230px);height:min(42vw,230px)}
+.big .actor{width:min(40vw,220px);height:min(50vw,280px)}
+.big .actor .body{font-size:min(36vw,210px)}
+.big .actor .face{width:min(20vw,120px);height:min(20vw,120px)}
+.big .actor.badge .face{width:min(42vw,230px);height:min(42vw,230px)}
+.big .actor.badge .act{font-size:min(16vw,100px)}
 .big .scene .c{color:inherit;font-size:1.3em}
 
-/* حول التطبيق */
-.about{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
-.about.show{display:flex}
-.about .box{background:var(--panel);color:var(--ink);border-radius:22px;max-width:420px;width:100%;padding:22px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+.modal.show{display:flex}
+.about .box{background:var(--panel);border-radius:22px;max-width:420px;width:100%;padding:22px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25)}
 .about .mark{width:72px;height:72px;border-radius:20px;background:var(--primary);color:var(--primary-ink);display:grid;place-items:center;font-size:38px;margin:0 auto 8px}
 .about h3{margin:0;font-size:1.5em}
-.about .ver{color:var(--muted);font-weight:300;font-size:.85em}
 .about p{font-weight:300;margin:12px 0}
 .about .dev{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
 .about .dev b{font-size:1.25em;display:block}
 .about .dev a{color:var(--primary);font-weight:700;text-decoration:none;direction:ltr;display:inline-block;margin-top:4px}
-body.contrast .about .dev a{color:var(--primary)}
 .about .btn{margin-top:16px;width:100%}
 
+/* SETTINGS */
+.sheet{align-items:stretch;padding:0}
+.sheet .box{background:var(--bg);width:100%;max-width:720px;margin:0 auto;overflow-y:auto;display:flex;flex-direction:column}
+.sheet-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+.sheet-head h2{margin:0;flex:1;font-size:1.2em}
+.sheet-body{padding:14px;display:flex;flex-direction:column;gap:12px}
+.welcome{background:var(--primary);color:var(--primary-ink);border-radius:16px;padding:14px;font-weight:700}
+.welcome small{display:block;font-weight:300;opacity:.9}
+.set{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.set h3{margin:0;font-size:1.05em}
+.field{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.95em}
+.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:12px;padding:11px;background:var(--card);font-weight:500}
+.field textarea{resize:vertical;line-height:1.7}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:80px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 8px;font-weight:700}
+.seg button[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.cond{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cond button{border:2px solid var(--line);background:var(--card);border-radius:16px;padding:12px 6px;text-align:center}
+.cond button span{display:block;font-size:2em}
+.cond button b{display:block}
+.cond button small{display:block;font-weight:300;color:var(--muted);font-size:.78em;line-height:1.4}
+.cond button[aria-pressed="true"]{border-color:var(--primary);background:var(--heard);box-shadow:0 0 0 2px var(--primary) inset}
+.tog{display:flex;align-items:center;gap:10px;font-weight:500;cursor:pointer}
+.tog input{width:22px;height:22px;accent-color:var(--primary)}
+.cardlist{display:flex;flex-direction:column;gap:8px}
+.citem{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px}
+.citem .ic{width:52px;height:52px;border-radius:12px;object-fit:cover;display:grid;place-items:center;font-size:32px;background:var(--soft);flex:none}
+.citem .tx{flex:1;min-width:0}
+.citem .tx b{display:block}
+.citem .tx span{font-size:.8em;color:var(--muted);font-weight:300;word-break:break-word}
+.citem button{border:0;background:transparent;font-size:1.2em;padding:6px}
+.addcard{border:2px dashed var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.photo-row{display:flex;gap:10px;align-items:center}
+.photo-pick{width:84px;height:84px;border-radius:16px;border:2px dashed var(--line);display:grid;place-items:center;text-align:center;font-size:.75em;color:var(--muted);cursor:pointer;overflow:hidden;flex:none;background:var(--card)}
+.photo-pick img{width:100%;height:100%;object-fit:cover}
+.photo-pick input{display:none}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(120px);background:#1d2433;color:#fff;padding:10px 18px;border-radius:999px;z-index:80;transition:transform .3s;font-size:.9em}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
 footer{color:var(--muted);font-weight:300;font-size:.8em;text-align:center;padding:8px}
-@media (max-width:600px){.mic{width:76px;height:76px;font-size:32px}.live-text{font-size:1.35em}}
+footer a{color:inherit;font-weight:500}
+@media (max-width:600px){.mic{width:76px;height:76px;font-size:32px}.live-text{font-size:1.35em}.cond button small{display:none}}
 </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <div class="logo"><div class="mark">🤟</div><div>صِلة<small>كلامك يصبح صوراً متحركة تفهمها أمي</small></div></div>
+    <div class="logo"><div class="mark">🤟</div><div>صِلة<small id="subtitle"></small></div></div>
     <div class="tools">
-      <select class="chip" id="lang" aria-label="لغة التعرف على الكلام">
+      <select class="chip" id="lang" aria-label="لغة الكلام">
         <option value="ar-DZ">العربية (الجزائر)</option>
         <option value="ar-SA">العربية الفصحى</option>
         <option value="ar-EG">العربية (مصر)</option>
         <option value="ar-MA">العربية (المغرب)</option>
+        <option value="ar-TN">العربية (تونس)</option>
         <option value="fr-FR">Français</option>
         <option value="en-US">English</option>
       </select>
-      <button class="chip" id="fsDown" aria-label="تصغير الخط">أ−</button>
-      <button class="chip" id="fsUp" aria-label="تكبير الخط">أ+</button>
-      <button class="chip" id="contrast" aria-pressed="false">◐ تباين عالٍ</button>
+      <button class="chip" id="setBtn">⚙️ الإعدادات</button>
       <button class="chip" id="aboutBtn">ℹ️ حول</button>
     </div>
   </header>
 
   <nav class="tabs" role="tablist">
-    <button class="tab" role="tab" aria-selected="true" data-v="listen"><span>👂</span>استماع</button>
-    <button class="tab" role="tab" aria-selected="false" data-v="speak"><span>👵</span>لوحة أمي</button>
-    <button class="tab" role="tab" aria-selected="false" data-v="history"><span>💬</span>المحادثة</button>
+    <button class="tab" role="tab" data-v="listen"><span>👂</span><i id="tabListen" style="font-style:normal">استماع</i></button>
+    <button class="tab" role="tab" data-v="speak"><span id="tabSpeakIcon">👆</span><i id="tabSpeak" style="font-style:normal"></i></button>
+    <button class="tab" role="tab" data-v="history"><span>💬</span>المحادثة</button>
   </nav>
 
-  <!-- LISTEN: hearing person speaks -> text + pictures -->
-  <section class="view active" id="v-listen">
+  <!-- LISTEN -->
+  <section class="view" id="v-listen">
     <div class="notice" id="micNotice"></div>
     <div class="panel">
       <div class="mic-row">
         <button class="mic" id="micBtn" aria-label="ابدأ الاستماع">🎤</button>
-        <div class="status">
-          <b id="statusText">اضغط على الميكروفون ودع الشخص الآخر يتكلم</b>
-          <span class="hint" id="statusHint">سيظهر كلامه نصاً كبيراً وصوراً توضيحية فوراً</span>
-        </div>
+        <div class="status"><b id="statusText"></b><span class="hint" id="statusHint"></span></div>
       </div>
       <div class="live-text" id="liveText" aria-live="polite"></div>
+      <div class="phrases" id="phrases"></div>
     </div>
     <div class="panel">
-      <h2>🎬 ما تراه أمي <span class="ai-badge" id="modeBadge">قاموس</span></h2>
-      <div class="stage" id="stage" title="اضغط لإعادة العرض"><div class="idle"><span class="e">🖼️</span>تكلّم وستظهر الصور هنا متحركة، واحدة بعد الأخرى</div></div>
+      <h2><span id="stageTitle"></span> <span class="ai-badge" id="modeBadge">قاموس</span></h2>
+      <div class="stage" id="stage" title="اضغط لإعادة العرض"></div>
       <div class="type-row">
         <input id="typeIn" placeholder="أو اكتب الجملة هنا (بالدارجة أو الفصحى)…" autocomplete="off">
         <button class="btn" id="typeGo">حوّل</button>
       </div>
       <div class="actions">
-        <button class="btn" id="showHeard">⛶ اعرض لأمي بشاشة كاملة</button>
+        <button class="btn" id="showHeard">⛶ شاشة كاملة</button>
         <button class="btn ghost" id="replay">🔁 أعد</button>
-        <button class="btn ghost" id="capToggle">🔤 إخفاء الكتابة</button>
         <button class="btn ghost" id="clearHeard">🧹 مسح</button>
       </div>
-      <div class="strip" id="strip" hidden></div>
     </div>
-    <details class="panel settings" id="aiBox">
-      <summary>🤖 الذكاء الاصطناعي (فهم أفضل للدارجة)</summary>
-      <p class="small">يُستدعى الذكاء الاصطناعي <b>فقط</b> عندما لا يفهم القاموس كل كلمات الجملة، وكل جملة تُترجم مرة واحدة ثم تُحفظ في الهاتف — فالجمل المتكررة لا تكلّف شيئاً. المفاتيح تُحفظ في هذا الجهاز فقط.</p>
-      <div class="type-row">
-        <select id="aiProv" class="chip" style="flex:1;padding:10px">
-          <option value="gemini">Gemini — مجاني (الأساسي)</option>
-          <option value="claude">Claude Haiku — أدق، شبه مجاني</option>
-          <option value="off">إيقاف — القاموس فقط</option>
-        </select>
-      </div>
-      <p class="small" style="margin-bottom:4px">1) مفتاح Gemini المجاني: من <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> (حساب Google فقط، دون بطاقة)</p>
-      <div class="type-row" style="margin-top:0">
-        <input id="gemKey" type="password" placeholder="AIza..." autocomplete="off">
-        <button class="btn" id="saveGem">حفظ</button>
-      </div>
-      <p class="small" style="margin-bottom:4px">2) مفتاح Claude (احتياطي، اختياري): من <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a></p>
-      <div class="type-row" style="margin-top:0">
-        <input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off">
-        <button class="btn" id="saveKey">حفظ</button>
-      </div>
-      <p class="small" id="keyState"></p>
-      <div class="actions"><button class="btn ghost" id="clearCache">🧠 مسح الجمل المحفوظة</button></div>
-    </details>
   </section>
 
-  <!-- SPEAK: deaf user builds sentence from pictures -> voice -->
+  <!-- SPEAK / BOARD -->
   <section class="view" id="v-speak">
     <div class="panel">
-      <h2>👵 أمي تشير إلى الصور لتقول ما تريد — اضغط على الجملة لحذف صورة</h2>
+      <h2 id="boardTitle"></h2>
       <div class="sentence" id="sentence"></div>
-      <div class="type-row">
+      <div class="type-row" id="meTypeRow">
         <input id="meType" placeholder="أو اكتب ما تريد قوله…" autocomplete="off">
         <button class="btn ghost" id="meAdd">أضف</button>
       </div>
       <div class="actions">
-        <button class="btn" id="sayBtn">🔊 انطق الجملة</button>
-        <button class="btn ghost" id="showMe">⛶ اعرضها للآخر</button>
+        <button class="btn" id="sayBtn">🔊 انطق</button>
+        <button class="btn ghost" id="showMe">⛶ اعرضها</button>
         <button class="btn ghost" id="undoBtn">↩︎ تراجع</button>
         <button class="btn ghost" id="clearMe">🧹 مسح</button>
       </div>
@@ -286,22 +307,25 @@ footer{color:var(--muted);font-weight:300;font-size:.8em;text-align:center;paddi
     </div>
   </section>
 
-  <footer>صِلة 1.0 — تطوير <a href="https://www.titterisoft.com" target="_blank" rel="noopener" style="color:inherit;font-weight:500">TitteriSoft</a> · www.titterisoft.com</footer>
+  <footer>صِلة 1.1 — تطوير <a href="https://www.titterisoft.com" target="_blank" rel="noopener">TitteriSoft</a> · www.titterisoft.com</footer>
 </div>
 
+<!-- full screen -->
 <div class="big" id="big" role="dialog" aria-modal="true">
   <button class="close" id="bigClose">✕ إغلاق</button>
   <div class="stage" id="bigStage" hidden></div>
   <div class="be" id="bigE"></div>
   <div class="bt" id="bigT"></div>
+  <a class="bphone" id="bigPhone" hidden></a>
 </div>
 
-<div class="about" id="about" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+<!-- about -->
+<div class="modal about" id="about" role="dialog" aria-modal="true">
   <div class="box">
     <div class="mark">🤟</div>
-    <h3 id="aboutTitle">صِلة</h3>
-    <div class="ver">الإصدار 1.0</div>
-    <p>تطبيق يحوّل الكلام إلى صور متحركة بسيطة، ليتواصل الأشخاص الصم — خاصة كبار السن الذين لا يقرؤون — مع من حولهم بسهولة.</p>
+    <h3>صِلة</h3>
+    <div class="small">الإصدار 1.1</div>
+    <p>تطبيق يحوّل الكلام إلى صور متحركة، ويحوّل الصور إلى كلام، ليتواصل الأشخاص الصم والبكم — خاصة كبار السن الذين لا يقرؤون — مع من حولهم بسهولة وكرامة.</p>
     <div class="dev">
       <span class="small">تطوير</span>
       <b>TitteriSoft</b>
@@ -310,8 +334,111 @@ footer{color:var(--muted);font-weight:300;font-size:.8em;text-align:center;paddi
     <button class="btn" id="aboutClose">حسناً</button>
   </div>
 </div>
+
+<!-- settings -->
+<div class="modal sheet" id="settings" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+  <div class="box">
+    <div class="sheet-head"><h2 id="setTitle">⚙️ الإعدادات</h2><button class="btn" id="setClose">✓ تم</button></div>
+    <div class="sheet-body">
+      <div class="welcome" id="welcome" hidden>👋 مرحباً بك في صِلة!<small>عرّفنا أولاً على الشخص الذي ستتواصل معه، ليتكيّف التطبيق معه. يمكنك تغيير كل شيء لاحقاً من زر ⚙️.</small></div>
+
+      <section class="set">
+        <h3>👤 الشخص</h3>
+        <label class="field">الاسم أو اللقب<input id="sName" maxlength="24" placeholder="مثال: أمي، أبي، جدتي، أحمد"></label>
+        <div class="seg" id="sGender"><button data-v="f">👩 أنثى</button><button data-v="m">👨 ذكر</button></div>
+        <div class="field">الحالة</div>
+        <div class="cond" id="sCond">
+          <button data-v="deaf"><span>🧏</span><b>أصم</b><small>لا يسمع، لكنه يتكلم</small></button>
+          <button data-v="mute"><span>🤐</span><b>أبكم</b><small>يسمع، لكنه لا يتكلم</small></button>
+          <button data-v="both"><span>🤟</span><b>أصم وأبكم</b><small>لا يسمع ولا يتكلم</small></button>
+        </div>
+        <label class="tog"><input type="checkbox" id="sReads"> يعرف القراءة (تظهر الكتابة تحت الصور وخانة الكتابة)</label>
+      </section>
+
+      <section class="set">
+        <h3>🖼️ صور العائلة والأشياء الخاصة</h3>
+        <p class="small" style="margin:0">أضف صورة وجه لكل فرد من العائلة. عندما تقول اسمه تظهر صورته — وإن قلت مثلاً «رشيد راح للسبيطار» يظهر وجه رشيد على شخص يمشي. يمكنك أيضاً إضافة أدوية وأماكن خاصة.</p>
+        <div class="cardlist" id="cardList"></div>
+        <div class="addcard">
+          <div class="photo-row">
+            <label class="photo-pick" id="cPick"><input type="file" id="cFile" accept="image/*"><span id="cPickTxt">📷<br>اختر صورة</span></label>
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+              <div class="seg" id="cType"><button data-v="person" aria-pressed="true">🧑 شخص</button><button data-v="thing">📦 شيء / مكان</button></div>
+              <input id="cEmoji" class="chip" style="padding:10px;border-radius:12px" maxlength="8" placeholder="أو إيموجي بدل الصورة 💊">
+            </div>
+          </div>
+          <label class="field">الاسم<input id="cLabel" maxlength="30" placeholder="مثال: رشيد"></label>
+          <label class="field">كلمات أخرى تدل عليه (اختياري، افصل بفاصلة)<input id="cWords" placeholder="مثال: الرشيد، خويا رشيد، ولدي"></label>
+          <button class="btn" id="cAdd">➕ أضف</button>
+          <span class="small" id="cMsg"></span>
+        </div>
+      </section>
+
+      <section class="set">
+        <h3>💬 عبارات سريعة</h3>
+        <p class="small" style="margin:0">عبارات تقولها كثيراً — تظهر كأزرار في شاشة الاستماع وتتحوّل لصور بضغطة واحدة (مفيدة في الأماكن المزدحمة). سطر لكل عبارة.</p>
+        <label class="field"><textarea id="sPhrases" rows="6"></textarea></label>
+      </section>
+
+      <section class="set">
+        <h3>🎬 العرض</h3>
+        <div class="field">سرعة عرض الصور</div>
+        <div class="seg" id="sSpeed"><button data-v="2400">🐢 بطيء</button><button data-v="1600">عادي</button><button data-v="1000">⚡ سريع</button></div>
+        <div class="field">حجم الخط والصور</div>
+        <div class="seg" id="sFs"><button data-v="0.9">صغير</button><button data-v="1">عادي</button><button data-v="1.2">كبير</button><button data-v="1.4">كبير جداً</button></div>
+        <label class="tog"><input type="checkbox" id="sCaps"> إظهار الكتابة تحت الصور</label>
+        <label class="tog"><input type="checkbox" id="sFlash"> وميض واهتزاز عند وصول كلام جديد</label>
+        <label class="tog"><input type="checkbox" id="sWake"> إبقاء الشاشة مضاءة أثناء الاستماع</label>
+        <label class="tog"><input type="checkbox" id="sContrast"> تباين عالٍ (لضعاف البصر)</label>
+      </section>
+
+      <section class="set">
+        <h3>🔊 اللغة والنطق</h3>
+        <label class="field">لغة الكلام<select id="sLang"></select></label>
+        <div id="ttsBox">
+          <div class="field">سرعة النطق</div>
+          <div class="seg" id="sRate"><button data-v="0.75">🐢 بطيئة</button><button data-v="0.95">عادية</button><button data-v="1.15">⚡ سريعة</button></div>
+          <label class="tog" style="margin-top:10px"><input type="checkbox" id="sSpeakTap"> انطق الصورة فور الضغط عليها</label>
+        </div>
+      </section>
+
+      <section class="set">
+        <h3>🆘 الطوارئ</h3>
+        <p class="small" style="margin:0">يظهر على شاشة الطوارئ ليتصل به من يساعد.</p>
+        <label class="field">اسم الشخص الذي يُتصل به<input id="sEmName" maxlength="30" placeholder="مثال: ابني محمد"></label>
+        <label class="field">رقم الهاتف<input id="sEmPhone" type="tel" inputmode="tel" maxlength="20" placeholder="0555 12 34 56" style="direction:ltr;text-align:right"></label>
+      </section>
+
+      <section class="set" id="aiBox">
+        <h3>🤖 الذكاء الاصطناعي (فهم أفضل للدارجة)</h3>
+        <p class="small" style="margin:0">يُستدعى فقط عندما لا يفهم القاموس كل الكلمات، وكل جملة تُترجم مرة واحدة ثم تُحفظ — فالجمل المتكررة مجانية. المفاتيح تبقى في هذا الجهاز فقط.</p>
+        <label class="field">المزوّد<select id="aiProv">
+          <option value="gemini">Gemini — مجاني (الأساسي)</option>
+          <option value="claude">Claude Haiku — أدق، شبه مجاني</option>
+          <option value="off">إيقاف — القاموس فقط</option>
+        </select></label>
+        <span class="small">1) مفتاح Gemini المجاني من <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a></span>
+        <div class="type-row" style="margin:0"><input id="gemKey" type="password" autocomplete="off"><button class="btn" id="saveGem">حفظ</button></div>
+        <span class="small">2) مفتاح Claude (احتياطي، اختياري) من <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a></span>
+        <div class="type-row" style="margin:0"><input id="apiKey" type="password" autocomplete="off"><button class="btn" id="saveKey">حفظ</button></div>
+        <span class="small" id="keyState"></span>
+      </section>
+
+      <section class="set">
+        <h3>🗂️ البيانات</h3>
+        <div class="actions" style="margin:0">
+          <button class="btn ghost" id="clearCache">🧠 مسح الجمل المحفوظة</button>
+          <button class="btn ghost" id="clearLog2">💬 مسح المحادثة</button>
+          <button class="btn danger" id="resetAll">⚠️ إعادة ضبط كل شيء</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
 <script>
-/* ============ 0) جسر أندرويد: التعرّف على الكلام عبر الهاتف عند العمل داخل تطبيق APK ============ */
+/* ============ 0) جسر أندرويد ============ */
 if (window.AndroidBridge) {
   window.SpeechRecognition = class {
     constructor(){ this.lang="ar-DZ"; this.continuous=true; this.interimResults=true; window.__sr=this; }
@@ -325,8 +452,29 @@ if (window.AndroidBridge) {
     else if (type==="end"){ r.onend && r.onend(); }
   };
 }
-/* ============ 1) القاموس المرئي: كلمة → صورة ============ */
-// kind: feel / need / q / urgent (لتلوين البطاقات)
+const $ = id => document.getElementById(id);
+const ls={get:k=>{try{return localStorage.getItem(k)||"";}catch(e){return "";}},
+          set:(k,v)=>{try{ v?localStorage.setItem(k,v):localStorage.removeItem(k); return true;}catch(e){ return false; }}};
+function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("show"),2200); }
+
+/* ============ 1) الإعدادات ============ */
+const DEFAULTS = {name:"أمي", gender:"f", cond:"deaf", reads:false, speed:1600, fs:1, caps:true, flash:true, wake:true, contrast:false,
+  lang:"ar-DZ", rate:0.95, speakTap:true, emName:"", emPhone:"", phrases:null, cards:[]};
+let S = Object.assign({}, DEFAULTS);
+let firstRun = true;
+try{ const raw=ls.get("sila-settings"); if (raw){ S=Object.assign({},DEFAULTS,JSON.parse(raw)); firstRun=false; } }catch(e){}
+function save(){ const ok=ls.set("sila-settings",JSON.stringify(S)); if(!ok) toast("⚠️ ذاكرة الهاتف ممتلئة — احذف بعض الصور"); return ok; }
+const F = () => S.gender==="f";
+const g = (m,f) => F()?f:m;
+const N = () => (S.name||"").trim() || g("أبي","أمي");
+const canHear = () => S.cond==="mute";
+const canSpeakAloud = () => S.cond!=="deaf";      // الأبكم يحتاج أن ينطق الهاتف عنه
+function defaultPhrases(){
+  return F() ? ["واش راكي؟","كليتي؟","وقت الدوا","نروحو للطبيب غدوة","راني رايح للخدمة ونولي العشية","جات الفاميليا","روحي ترقدي","تحبي تشربي قهوة؟"]
+             : ["واش راك؟","كليت؟","وقت الدوا","نروحو للطبيب غدوة","راني رايح للخدمة ونولي العشية","جات الفاميليا","روح ترقد","تحب تشرب قهوة؟"];
+}
+
+/* ============ 2) القاموس المرئي ============ */
 const RAW = [
  // تحيات
  ["السلام عليكم|سلام|مرحبا|اهلا|اهلين|اهلا وسهلا|اهلا بيك|صباح الخير|مساء الخير|صباح النور|مساء النور|bonjour|salut|hello|hi","👋",""],
@@ -433,13 +581,21 @@ const norm = s => s.toLowerCase()
   .replace(/[أإآٱ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/ؤ/g,"و").replace(/ئ/g,"ي")
   .replace(/[éèêë]/g,"e").replace(/[àâ]/g,"a").replace(/[ôö]/g,"o").replace(/[îï]/g,"i").replace(/[ûü]/g,"u").replace(/ç/g,"c")
   .replace(/[^\p{L}\p{N}' -]/gu," ").trim();
-
-const DICT = new Map(); // normalized key -> {e, kind}
-let MAXN = 1;
+const BASE = new Map(); let BASE_MAXN = 1;
 for (const [keys,e,kind] of RAW) for (const k of keys.split("|")) {
   const n = norm(k); if (!n) continue;
-  if (!DICT.has(n)) DICT.set(n,{e,kind});
-  MAXN = Math.max(MAXN, n.split(" ").length);
+  if (!BASE.has(n)) BASE.set(n,{e,kind});
+  BASE_MAXN = Math.max(BASE_MAXN, n.split(" ").length);
+}
+let DICT = BASE, MAXN = BASE_MAXN;
+const splitWords = s => String(s||"").split(/[|,،;؛\n]/).map(x=>x.trim()).filter(Boolean);
+function rebuildDict(){
+  DICT = new Map(BASE); MAXN = BASE_MAXN;
+  for (const c of S.cards) for (const w of [c.label, ...splitWords(c.words)]) {
+    const n = norm(w); if (!n) continue;
+    DICT.set(n,{e:c.emoji||null, img:c.img||null, kind:"custom", card:c.id, person:c.type==="person"});
+    MAXN = Math.max(MAXN, n.split(" ").length);
+  }
 }
 const PREF = ["وبال","وال","بال","فال","كال","لل","ال","و","ف","ب","ل","ك","س"];
 const SUFF = ["هما","كما","ها","هم","كم","كن","نا","ني","ك","ه","ي","ات","ون","ين","ان","وا","ت","s"];
@@ -451,80 +607,80 @@ function lookupWord(w){
   for (const c of cands) if (DICT.has(c)) return DICT.get(c);
   return null;
 }
-// يحوّل جملة إلى قائمة بطاقات (يبحث عن العبارات متعددة الكلمات أولاً)
 function toPictos(text){
-  const orig = text.split(/\s+/).filter(Boolean);
-  const nw = orig.map(norm);
-  const out = [];
+  const orig = text.split(/\s+/).filter(Boolean), nw = orig.map(norm), out = [];
   for (let i=0;i<nw.length;){
     let hit=null, len=1;
-    for (let n=Math.min(MAXN,nw.length-i); n>=2; n--){
-      const ph = nw.slice(i,i+n).join(" ");
-      if (DICT.has(ph)){ hit=DICT.get(ph); len=n; break; }
-    }
+    for (let n=Math.min(MAXN,nw.length-i); n>=2; n--){ const ph=nw.slice(i,i+n).join(" "); if (DICT.has(ph)){ hit=DICT.get(ph); len=n; break; } }
     if (!hit) hit = nw[i] ? lookupWord(nw[i]) : null;
-    const word = orig.slice(i,i+len).join(" ");
-    if (hit) out.push({w:word.replace(/[؟?!.,،]/g,""), e:hit.e, kind:hit.kind});
-    else if (nw[i] && !STOP.has(nw[i])) out.push({w:word.replace(/[؟?!.,،]/g,""), e:null});
+    const word = orig.slice(i,i+len).join(" ").replace(/[؟?!.,،]/g,"");
+    if (hit) out.push(Object.assign({w:word}, hit));
+    else if (nw[i] && !STOP.has(nw[i])) out.push({w:word, e:null});
     i+=len;
   }
   return out;
 }
 
-/* ============ 2) أدوات العرض ============ */
-const $ = id => document.getElementById(id);
-function picEl(p){
-  const d = document.createElement("div");
-  if (p.e){ d.className="pic"+(p.kind?" kind-"+p.kind:""); d.innerHTML=`<span class="e">${p.e}</span><span class="w"></span>`; d.querySelector(".w").textContent=p.w; }
-  else { d.className="pic word"; d.textContent=p.w; }
-  return d;
-}
-function flash(){
-  document.body.classList.add("flash"); setTimeout(()=>document.body.classList.remove("flash"),500);
-  try{ navigator.vibrate && navigator.vibrate([120,60,120]); }catch(e){}
-}
-
-/* ============ 3) سجل المحادثة ============ */
-let LOG = [];
-try{ LOG = JSON.parse(localStorage.getItem("sila-log")||"[]"); }catch(e){}
-function saveLog(){ try{ localStorage.setItem("sila-log", JSON.stringify(LOG.slice(-200))); }catch(e){} }
-function addLog(who,text,pics){ LOG.push({who,text,pics:pics.filter(p=>p.e).map(p=>p.e),t:Date.now()}); saveLog(); renderLog(); }
-function renderLog(){
-  const el=$("log"); el.innerHTML="";
-  if (!LOG.length){ el.innerHTML='<div class="empty">لا توجد رسائل بعد.<br>ابدأ من تبويب «استماع» أو «تكلّم».</div>'; return; }
-  for (const m of LOG){
-    const d=document.createElement("div"); d.className="msg "+m.who;
-    const time=new Date(m.t).toLocaleTimeString("ar",{hour:"2-digit",minute:"2-digit"});
-    d.innerHTML=`<div class="who">${m.who==="heard"?"👂 الطرف الآخر":"🧏 أنا"} · ${time}</div><div class="t"></div><div class="mini"></div>`;
-    d.querySelector(".t").textContent=m.text; d.querySelector(".mini").textContent=m.pics.join(" ");
-    el.appendChild(d);
-  }
-}
-
-/* ============ 4) وضع الاستماع: كلام → نص + صور ============ */
-let heardPics=[], lastHeardText="", reqId=0;
-
-// اختيار حركة بسيطة لكل صورة
-const ANIM_BY_EMOJI = {"👋":"wave","🙋‍♂️":"wave","🚶➡️":"slide","🚶⬅️":"slideback","😴":"float","🚗":"slide","🚌":"slide","🚕":"slide","🚆":"slide","✈️":"float","🚑":"slide","❤️":"pulse","✅":"nod","❌":"shake","⏳":"spin","🕒":"spin","🍽️":"bounce","💧":"float","🔥":"grow","🆘":"shake","🙏":"nod","☀️":"spin","🌧️":"float"};
+/* ============ 3) المشاهد والحركة ============ */
+const ANIM_BY_EMOJI = {"🤒":"shake","🤕":"shake","😨":"shake","😢":"float","😊":"pulse","🗣️":"nod","📞":"shake","🍽️😋":"bounce","👋":"wave","🙋‍♂️":"wave","🚶➡️":"slide","🚶⬅️":"slideback","😴":"float","🚗":"slide","🚌":"slide","🚕":"slide","🚆":"slide","✈️":"float","🚑":"slide","❤️":"pulse","✅":"nod","❌":"shake","⏳":"spin","🕒":"spin","🍽️":"bounce","💧":"float","🔥":"grow","🆘":"shake","🙏":"nod","☀️":"spin","🌧️":"float"};
 function animFor(p){
   if (ANIM_BY_EMOJI[p.e]) return ANIM_BY_EMOJI[p.e];
   if (p.kind==="urgent") return "shake";
   if (p.kind==="feel") return "pulse";
   if (p.kind==="q") return "nod";
+  if (p.kind==="custom") return "grow";
   return ["bounce","grow","float"][(p.e||"").length%3];
 }
-// من بطاقات القاموس إلى مشاهد (نتجاهل الكلمات بلا صورة، لأن أمي لا تقرأ)
-const dictScenes = pics => pics.filter(p=>p.e).map(p=>({e:p.e,c:p.w,a:animFor(p)}));
-
-// عرض المشاهد واحدة بعد الأخرى ثم كلها معاً
+// أفعال يمكن أن «يقوم بها» شخص من العائلة → وجهه + الحركة
+const BODY_ACT = {"🚶➡️":["🚶","slide"],"🚶⬅️":["🚶","slideback"],"🧍":["🧍","bounce"],"🪑":["🧎","nod"],"⚽":["🏃","slide"]};
+const ACTIONS = new Set(["🚶➡️","🚶⬅️","🧍","🪑","⚽","😴","🍽️","🥤","🤒","🤕","😊","😢","😩","😨","😠","🗣️","👂","👀","📞","🛍️","🧳","🍳","📚","✍️","📖","🧼","⏳","💼","😂","🤲","🍽️😋","💧","🥶","🥵","❤️","🙏","👋","🙋‍♂️"]);
+const PERSONISH = new Set(["👦","👧","👨","👩","🧒","👩‍👧","👨‍👦","🧑‍🤝‍🧑","👨‍👩‍👧‍👦","🙋","👉"]);
+function cardById(id){ return S.cards.find(c=>c.id===id); }
+function actorScene(card, actE, cap){
+  const b = BODY_ACT[actE];
+  if (b) return {img:card.img, e:card.emoji, body:b[0], a:b[1], c:cap};
+  return {img:card.img, e:card.emoji, act:actE, a:ANIM_BY_EMOJI[actE]||"bounce", c:cap};
+}
+function dictScenes(pics){
+  const items = pics.filter(p=>p.e||p.img);
+  const out = [];
+  for (let i=0;i<items.length;i++){
+    const p = items[i];
+    if (p.kind==="custom" && p.person && p.img){
+      // تخطَّ نفس الشخص المكرر أو أوصافه (خويا، ولدي…) وابحث عن فعل قريب
+      let j=i+1;
+      while (j<items.length && (items[j].card===p.card || PERSONISH.has(items[j].e)) && j<=i+2) j++;
+      if (j<items.length && ACTIONS.has(items[j].e)){ out.push(actorScene(cardById(p.card)||p, items[j].e, p.w+" "+items[j].w)); i=j; continue; }
+      // فعل قبل الاسم: «راح رشيد»
+      const prev = out[out.length-1];
+      if (prev && !prev.img && ACTIONS.has(prev.e)){ out.pop(); out.push(actorScene(cardById(p.card)||p, prev.e, p.w+" "+prev.c)); continue; }
+      while (i+1<items.length && items[i+1].card===p.card) i++;
+    }
+    out.push({e:p.e, img:p.img, c:p.w, a:animFor(p)});
+  }
+  return out.slice(0,6);
+}
+function sceneVisual(s){
+  const wrap=document.createElement("span");
+  if (s.img && (s.body||s.act)){
+    wrap.className="actor"+(s.act?" badge":"")+" a-"+(s.a||"bounce");
+    if (s.body){ const b=document.createElement("span"); b.className="body"; b.textContent=s.body; wrap.appendChild(b); }
+    const im=document.createElement("img"); im.className="face"; im.src=s.img; im.alt=""; wrap.appendChild(im);
+    if (s.act){ const a=document.createElement("span"); a.className="act"; a.textContent=s.act; wrap.appendChild(a); }
+    return wrap;
+  }
+  if (s.img){ const im=document.createElement("img"); im.className="e a-"+(s.a||"grow"); im.src=s.img; im.alt=""; return im; }
+  wrap.className="e a-"+(s.a||"bounce"); wrap.textContent=s.e||"❔"; return wrap;
+}
 const timers = new Map();
+function idle(el,icon,txt){ el.innerHTML=`<div class="idle"><span class="e">${icon}</span></div>`; el.querySelector(".idle").append(txt); }
 function playStory(el, scenes, loop){
   clearInterval(timers.get(el)); el.innerHTML="";
-  if (!scenes.length){ el.innerHTML='<div class="idle"><span class="e">🤷</span>لم أجد صوراً لهذه الجملة — جرّب كلمات أبسط أو فعّل الذكاء الاصطناعي</div>'; return; }
+  if (!scenes.length){ idle(el,"🤷","لم أجد صوراً لهذه الجملة — جرّب كلمات أبسط أو فعّل الذكاء الاصطناعي"); return; }
   const nodes = scenes.map(s=>{
     const d=document.createElement("div"); d.className="scene dim";
-    d.innerHTML=`<span class="e a-${s.a||"bounce"}"></span><span class="c"></span>`;
-    d.querySelector(".e").textContent=s.e; d.querySelector(".c").textContent=s.c||"";
+    d.appendChild(sceneVisual(s));
+    const c=document.createElement("span"); c.className="c"; c.textContent=s.c||""; d.appendChild(c);
     el.appendChild(d); return d;
   });
   let i=0;
@@ -532,37 +688,88 @@ function playStory(el, scenes, loop){
     if (i<nodes.length){ nodes.forEach((n,k)=>n.classList.toggle("dim",k!==i)); i++; }
     else { nodes.forEach(n=>n.classList.remove("dim")); if (loop) i=0; else clearInterval(timers.get(el)); }
   };
-  step(); timers.set(el, setInterval(step, nodes.length>1?1600:99999));
+  step(); timers.set(el, setInterval(step, nodes.length>1 ? +S.speed : 99999));
+}
+function picEl(p){
+  const d=document.createElement("div");
+  if (p.img||p.e){
+    d.className="pic";
+    if (p.img){ const im=document.createElement("img"); im.className="e"; im.src=p.img; im.alt=""; d.appendChild(im); }
+    else { const e=document.createElement("span"); e.className="e"; e.textContent=p.e; d.appendChild(e); }
+    const w=document.createElement("span"); w.className="w"; w.textContent=p.w; d.appendChild(w);
+  } else { d.className="pic word"; d.textContent=p.w; }
+  return d;
+}
+function flash(){
+  if (!S.flash) return;
+  document.body.classList.add("flash"); setTimeout(()=>document.body.classList.remove("flash"),500);
+  try{ navigator.vibrate && navigator.vibrate([120,60,120]); }catch(e){}
 }
 
-// الذكاء الاصطناعي: يفهم الجملة ويختار صوراً بسيطة
-// ===== الذكاء الاصطناعي: مزوّدان + ذاكرة + استدعاء عند الحاجة فقط =====
+/* ============ 4) سجل المحادثة ============ */
+let LOG = []; try{ LOG = JSON.parse(ls.get("sila-log")||"[]"); }catch(e){}
+function saveLog(){ ls.set("sila-log", JSON.stringify(LOG.slice(-200))); }
+const sceneEmoji = s => s.img ? (s.act||s.body||"🖼️") : (s.e||"");
+function addLog(who,text,emojis){ LOG.push({who,text,pics:emojis.filter(Boolean),t:Date.now()}); saveLog(); if ($("v-history").classList.contains("active")) renderLog(); }
+function renderLog(){
+  const el=$("log"); el.innerHTML="";
+  if (!LOG.length){ el.innerHTML='<div class="empty">لا توجد رسائل بعد.</div>'; return; }
+  for (const m of LOG){
+    const d=document.createElement("div"); d.className="msg "+m.who;
+    const time=new Date(m.t).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",hour12:false});
+    d.innerHTML=`<div class="who"></div><div class="t"></div><div class="mini"></div>`;
+    d.querySelector(".who").textContent=(m.who==="heard"?"👂 المتحدث":"👤 "+N())+" · "+time;
+    d.querySelector(".t").textContent=m.text; d.querySelector(".mini").textContent=m.pics.join(" ");
+    el.appendChild(d);
+  }
+  el.lastChild && el.lastChild.scrollIntoView({block:"end"});
+}
+
+/* ============ 5) الذكاء الاصطناعي ============ */
 const CLAUDE_MODEL="claude-haiku-5-5";
 const GEMINI_MODELS=["gemini-flash-lite-latest","gemini-2.5-flash-lite"];
-const ls={get:k=>{try{return localStorage.getItem(k)||"";}catch(e){return "";}},
-          set:(k,v)=>{try{v?localStorage.setItem(k,v):localStorage.removeItem(k);}catch(e){}}};
 let apiKey=ls.get("sila-key"), gemKey=ls.get("sila-gem"), aiProv=ls.get("sila-prov")||"gemini";
-const SYS = `أنت تساعد ابناً يتحدث مع أمه المسنّة في الجزائر. الأم صمّاء (فقدت السمع بعد أن كانت تسمع) ولا تعرف القراءة ولا الكتابة، لذلك تفهم فقط الصور.
+function buildSys(){
+  const cond = {deaf:g("أصم (فقد السمع) لكنه يتكلم","صمّاء (فقدت السمع) لكنها تتكلم"),
+                mute:g("يسمع لكنه لا يتكلم","تسمع لكنها لا تتكلم"),
+                both:g("أصم وأبكم","صمّاء وبكماء")}[S.cond];
+  const reads = S.reads ? g("يعرف القراءة قليلاً","تعرف القراءة قليلاً") : g("لا يعرف القراءة ولا الكتابة، لذلك يفهم الصور فقط","لا تعرف القراءة ولا الكتابة، لذلك تفهم الصور فقط");
+  const people = S.cards.length ? `
+صور خاصة متوفرة (إذا ذُكر أحدها في الجملة ضع رمزه بالضبط في e):
+${S.cards.map(c=>`- @${c.id} = ${c.label}${c.words?" ("+splitWords(c.words).join("، ")+")":""}${c.type==="person"?" [شخص]":""}`).join("\n")}
+إذا كان [شخص] يقوم بفعل (يمشي، يجي، يرقد، ياكل، مريض…) اجعله مشهداً واحداً: e = رمز الشخص و act = إيموجي الفعل (🚶 للذهاب أو المجيء، 😴، 🍽️، 🤒، 🗣️، 📞…).` : "";
+  return `أنت تساعد شخصاً في الجزائر يتحدث مع ${N()}. ${N()} ${cond}، و${reads}.
 حوّل الجملة المسموعة (قد تكون بالدارجة الجزائرية أو الفصحى أو الفرنسية وقد تحتوي أخطاء التعرف على الصوت) إلى قصة مصوّرة قصيرة جداً.
 القواعد:
 - من 1 إلى 5 مشاهد بالترتيب المنطقي للمعنى. الأقل أفضل.
-- كل مشهد إيموجي واحد أو اثنان كحد أقصى، ملموس وواضح لامرأة مسنّة (أشخاص، أماكن، أكل، أفعال، مشاعر). تجنّب الرموز المجردة والحروف.
+- كل مشهد إيموجي واحد أو اثنان كحد أقصى، ملموس وواضح لشخص مسنّ (أشخاص، أماكن، أكل، أفعال، مشاعر). تجنّب الرموز المجردة والحروف.
 - اجعل السؤال واضحاً بإضافة ❓ في آخر مشهد إن كانت الجملة سؤالاً. النفي: أضف ❌ بعد الشيء المنفي.
 - للزمن: 🌅 صباحاً، 🌙 ليلاً، 📅➡️ غداً، ⬅️📅 أمس، ⏱️ الآن.
-- c: كلمة أو كلمتان بالدارجة الجزائرية تصف المشهد (للابن فقط).
-- a: حركة واحدة من: bounce, slide, slideback, pulse, shake, spin, float, grow, wave, nod — اختر ما يعبّر عن المعنى (slide للذهاب، slideback للمجيء، wave للتحية، pulse للحب والمشاعر، shake للألم أو الخطر أو الرفض، float للنوم والماء، nod للموافقة والسؤال، spin للانتظار والوقت).
-أجب بـ JSON فقط بدون أي نص آخر، بهذا الشكل: {"scenes":[{"e":"🏥","c":"سبيطار","a":"bounce"}]}`;
-
+- c: كلمة أو كلمتان بالدارجة الجزائرية تصف المشهد.
+- a: حركة واحدة من: bounce, slide, slideback, pulse, shake, spin, float, grow, wave, nod (slide للذهاب، slideback للمجيء، wave للتحية، pulse للمشاعر، shake للألم أو الخطر أو الرفض، float للنوم والماء، nod للموافقة والسؤال، spin للانتظار).${people}
+أجب بـ JSON فقط بدون أي نص آخر: {"scenes":[{"e":"🏥","c":"سبيطار","a":"bounce"}]}`;
+}
+const ANIMS=/^(bounce|slide|slideback|pulse|shake|spin|float|grow|wave|nod)$/;
 function parseScenes(t){
   const m = String(t||"").match(/\{[\s\S]*\}/); if (!m) throw new Error("bad json");
-  const sc = (JSON.parse(m[0]).scenes||[]).filter(s=>s&&s.e).slice(0,5);
-  if (!sc.length) throw new Error("empty");
-  return sc.map(s=>({e:String(s.e),c:String(s.c||""),a:/^(bounce|slide|slideback|pulse|shake|spin|float|grow|wave|nod)$/.test(s.a)?s.a:"bounce"}));
+  const out=[];
+  for (const s of (JSON.parse(m[0]).scenes||[]).slice(0,5)){
+    if (!s||!s.e) continue;
+    const e=String(s.e), a=ANIMS.test(s.a)?s.a:"bounce", c=String(s.c||"");
+    if (e.startsWith("@")){
+      const card=cardById(e.slice(1)); if (!card) continue;
+      if (s.act && card.img){ const act=String(s.act); const b=BODY_ACT[act]||(act==="🚶"?["🚶",a==="slideback"?"slideback":"slide"]:null);
+        out.push(b?{img:card.img,body:b[0],a:b[1],c}:{img:card.img,act,a,c}); }
+      else out.push({img:card.img||null,e:card.emoji||(card.img?null:"🖼️"),a:card.img?"grow":a,c});
+    } else out.push({e,a,c});
+  }
+  if (!out.length) throw new Error("empty");
+  return out;
 }
 async function askClaude(text){
   const r = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
     headers:{"x-api-key":apiKey,"anthropic-version":"2023-06-01","content-type":"application/json","anthropic-dangerous-direct-browser-access":"true"},
-    body:JSON.stringify({model:CLAUDE_MODEL,max_tokens:400,system:SYS,messages:[{role:"user",content:text}]})});
+    body:JSON.stringify({model:CLAUDE_MODEL,max_tokens:400,system:buildSys(),messages:[{role:"user",content:text}]})});
   if (!r.ok) throw new Error("claude "+r.status);
   const j = await r.json();
   return parseScenes((j.content||[]).map(b=>b.text||"").join(""));
@@ -572,26 +779,28 @@ async function askGemini(text){
   for (const model of GEMINI_MODELS){
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:"POST",
       headers:{"content-type":"application/json","x-goog-api-key":gemKey},
-      body:JSON.stringify({systemInstruction:{parts:[{text:SYS}]},contents:[{role:"user",parts:[{text}]}],
+      body:JSON.stringify({systemInstruction:{parts:[{text:buildSys()}]},contents:[{role:"user",parts:[{text}]}],
         generationConfig:{responseMimeType:"application/json",maxOutputTokens:400,temperature:0.3}})});
-    if (r.status===404){ last=new Error("gemini 404"); continue; }   // اسم النموذج غير متاح → جرّب التالي
+    if (r.status===404){ last=new Error("gemini 404"); continue; }
     if (!r.ok) throw new Error("gemini "+r.status);
     const j = await r.json();
     return parseScenes(((j.candidates||[])[0]?.content?.parts||[]).map(p=>p.text||"").join(""));
   }
   throw last;
 }
-// ذاكرة الجمل: كل جملة تُترجم مرة واحدة فقط
 let CACHE={}; try{ CACHE=JSON.parse(ls.get("sila-cache")||"{}"); }catch(e){}
 const cacheKey = t => norm(t).replace(/\s+/g," ");
-function cacheGet(t){ return CACHE[cacheKey(t)]; }
+// الصور الخاصة لا تُخزّن داخل الذاكرة (لتوفير المساحة) — نخزّن مرجعها فقط
+const packScene = s => s.img ? Object.assign({},s,{img:"#"+(S.cards.find(c=>c.img===s.img)||{}).id}) : s;
+const unpackScene = s => (s.img&&s.img.startsWith("#")) ? Object.assign({},s,{img:(cardById(s.img.slice(1))||{}).img||null}) : s;
+function cacheGet(t){ const v=CACHE[cacheKey(t)]; return v ? v.map(unpackScene) : null; }
 function cachePut(t,sc){
-  CACHE[cacheKey(t)]=sc;
+  CACHE[cacheKey(t)]=sc.map(packScene);
   const ks=Object.keys(CACHE); if (ks.length>800) ks.slice(0,ks.length-800).forEach(k=>delete CACHE[k]);
   ls.set("sila-cache",JSON.stringify(CACHE)); updateKeyUI();
 }
-// هل فهم القاموس كل الكلمات المهمة؟ إذا نعم → لا داعي للذكاء الاصطناعي
-const dictCovers = pics => pics.length>0 && pics.every(p=>p.e);
+function clearCache(){ CACHE={}; ls.set("sila-cache",""); updateKeyUI(); }
+const dictCovers = pics => pics.length>0 && pics.every(p=>p.e||p.img);
 function providers(){
   const has={gemini:!!gemKey, claude:!!apiKey};
   const order = aiProv==="claude" ? ["claude","gemini"] : aiProv==="gemini" ? ["gemini","claude"] : [];
@@ -610,22 +819,17 @@ function updateKeyUI(){
   $("aiProv").value=aiProv;
   const ps=providers();
   $("modeBadge").textContent = ps.length ? "ذكاء اصطناعي" : "قاموس";
-  const n=Object.keys(CACHE).length;
-  $("keyState").textContent = (ps.length ? "✅ مفعّل: "+ps.map(p=>PROV_NAME[p]).join(" ثم ") : (aiProv==="off"?"⏸️ الذكاء الاصطناعي موقوف — القاموس فقط.":"⚪ أدخل مفتاحاً واحداً على الأقل لتفعيل الذكاء الاصطناعي."))
-    + ` · جمل محفوظة: ${n}`;
+  $("keyState").textContent = (ps.length ? "✅ مفعّل: "+ps.map(p=>PROV_NAME[p]).join(" ثم ") : (aiProv==="off"?"⏸️ موقوف — القاموس فقط.":"⚪ أدخل مفتاحاً واحداً على الأقل."))
+    + ` · جمل محفوظة: ${Object.keys(CACHE).length}`;
+  $("apiKey").placeholder = apiKey ? "✓ محفوظ — اكتب مفتاحاً جديداً لتغييره" : "sk-ant-...";
+  $("gemKey").placeholder = gemKey ? "✓ محفوظ — اكتب مفتاحاً جديداً لتغييره" : "AIza...";
 }
-$("saveKey").onclick=()=>{ apiKey=$("apiKey").value.trim(); ls.set("sila-key",apiKey); $("apiKey").value=""; updateKeyUI(); };
-$("saveGem").onclick=()=>{ gemKey=$("gemKey").value.trim(); ls.set("sila-gem",gemKey); $("gemKey").value=""; updateKeyUI(); };
-$("aiProv").onchange=e=>{ aiProv=e.target.value; ls.set("sila-prov",aiProv); updateKeyUI(); };
-$("clearCache").onclick=()=>{ CACHE={}; ls.set("sila-cache",""); updateKeyUI(); };
-$("apiKey").placeholder = apiKey ? "✓ محفوظ — اكتب مفتاحاً جديداً لتغييره" : "sk-ant-...";
-$("gemKey").placeholder = gemKey ? "✓ محفوظ — اكتب مفتاحاً جديداً لتغييره" : "AIza...";
 
-let curScenes=[];
-async function showHeard(text, final){
-  if (!final) return;
+/* ============ 6) الاستماع: كلام → صور ============ */
+let lastHeardText="", reqId=0, curScenes=[];
+async function showHeard(text){
   const pics = toPictos(text);
-  heardPics = pics; lastHeardText=text;
+  lastHeardText=text;
   const my = ++reqId;
   const setScenes = (sc,badge) => {
     curScenes=sc; playStory($("stage"), sc, false);
@@ -634,33 +838,37 @@ async function showHeard(text, final){
   };
   flash();
   const cached = providers().length ? cacheGet(text) : null;
-  if (cached){ setScenes(cached,"🧠 محفوظة"); }                       // 1) من الذاكرة: مجاناً وفوراً
+  if (cached){ setScenes(cached,"🧠 محفوظة"); }
   else {
-    setScenes(dictScenes(pics),"قاموس");                               // 2) القاموس: فوراً
-    if (providers().length && !dictCovers(pics)){                       // 3) الذكاء الاصطناعي عند الحاجة فقط
+    setScenes(dictScenes(pics),"قاموس");
+    if (providers().length && !dictCovers(pics)){
       $("modeBadge").textContent="… يفكّر";
-      try{
-        const {sc,src} = await aiScenes(text);
-        if (my===reqId) setScenes(sc,"🤖 "+PROV_NAME[src]);
-      }catch(e){ if (my===reqId) $("modeBadge").textContent="قاموس (تعذّر الاتصال)"; }
+      try{ const {sc,src} = await aiScenes(text); if (my===reqId) setScenes(sc,"🤖 "+PROV_NAME[src]); }
+      catch(e){ if (my===reqId) $("modeBadge").textContent="قاموس (تعذّر الاتصال)"; }
     } else if (providers().length) $("modeBadge").textContent="قاموس ✓";
   }
-  addLog("heard", text, curScenes.map(s=>({e:s.e})));
+  addLog("heard", text, curScenes.map(sceneEmoji));
 }
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec=null, listening=false, finalText="";
+let rec=null, listening=false, finalText="", wakeLock=null;
 function setStatus(t,h){ $("statusText").textContent=t; $("statusHint").textContent=h||""; }
+function idleStatus(){ setStatus("اضغط على الميكروفون وتكلّم", `سيظهر كلامك صوراً متحركة ${g("يفهمها","تفهمها")} ${N()}`); }
 function noticeMic(msg){ const n=$("micNotice"); n.innerHTML=msg; n.classList.add("show"); }
-
+async function keepAwake(on){
+  if (window.AndroidBridge && AndroidBridge.keepAwake){ try{ AndroidBridge.keepAwake(!!on); }catch(e){} return; }
+  try{
+    if (on && S.wake && navigator.wakeLock && !wakeLock) wakeLock = await navigator.wakeLock.request("screen");
+    if (!on && wakeLock){ await wakeLock.release(); wakeLock=null; }
+  }catch(e){ wakeLock=null; }
+}
 function startRec(){
-  if (!SR){ noticeMic("⚠️ متصفحك لا يدعم التعرف على الكلام. استخدم <b>Google Chrome</b> أو <b>Edge</b>، أو اكتب الجملة في الخانة أدناه."); return; }
-  rec = new SR();
-  rec.lang = $("lang").value; rec.continuous = true; rec.interimResults = true;
+  if (!SR){ noticeMic("⚠️ هذا المتصفح لا يدعم التعرف على الكلام. استخدم <b>Google Chrome</b>، أو اكتب الجملة يدوياً."); return; }
+  rec = new SR(); rec.lang = S.lang; rec.continuous = true; rec.interimResults = true;
   rec.onresult = ev => {
     let interim="";
     for (let i=ev.resultIndex;i<ev.results.length;i++){
       const r=ev.results[i];
-      if (r.isFinal){ const t=r[0].transcript.trim(); if(t){ finalText=t; showHeard(t,true); } }
+      if (r.isFinal){ const t=r[0].transcript.trim(); if(t){ finalText=t; showHeard(t); } }
       else interim += r[0].transcript;
     }
     const lt=$("liveText"); lt.textContent = finalText;
@@ -668,116 +876,256 @@ function startRec(){
   };
   rec.onerror = e => {
     if (e.error==="not-allowed"||e.error==="service-not-allowed"){
-      stopRec();
-      noticeMic("🎤 لم يُسمح باستخدام الميكروفون. اسمح بالإذن من شريط العنوان، أو افتح الملف مباشرة في Chrome. يمكنك دائماً كتابة الجملة يدوياً.");
-    } else if (e.error==="network"){ setStatus("⚠️ خطأ في الشبكة","التعرف على الكلام في Chrome يحتاج اتصالاً بالإنترنت"); }
+      stopRec(); noticeMic("🎤 لم يُسمح باستخدام الميكروفون. اسمح بالإذن من إعدادات الهاتف أو المتصفح. يمكنك دائماً كتابة الجملة يدوياً.");
+    } else if (e.error==="network"){ setStatus("⚠️ لا يوجد اتصال بالإنترنت","التعرّف على الكلام يحتاج الإنترنت — يمكنك الكتابة يدوياً"); }
   };
   rec.onend = () => { if (listening) { try{ rec.start(); }catch(e){} } };
   try{ rec.start(); }catch(e){ noticeMic("تعذّر تشغيل الميكروفون: "+e.message); return; }
   listening=true; $("micBtn").classList.add("on"); $("micBtn").textContent="⏹";
-  setStatus("🔴 أستمع الآن…","تكلّم بوضوح وقرب الهاتف. اضغط مرة أخرى للإيقاف");
+  setStatus("🔴 أستمع الآن…","تكلّم بوضوح وبجمل قصيرة. اضغط مرة أخرى للإيقاف");
+  keepAwake(true);
 }
 function stopRec(){
   listening=false; try{ rec && rec.stop(); }catch(e){}
-  $("micBtn").classList.remove("on"); $("micBtn").textContent="🎤";
-  setStatus("اضغط على الميكروفون ودع الشخص الآخر يتكلم","سيظهر كلامه نصاً كبيراً وصوراً توضيحية فوراً");
+  $("micBtn").classList.remove("on"); $("micBtn").textContent="🎤"; idleStatus(); keepAwake(false);
 }
 $("micBtn").onclick = () => listening ? stopRec() : startRec();
-$("lang").onchange = () => { if (listening){ stopRec(); startRec(); } };
-function typedHeard(){ const v=$("typeIn").value.trim(); if(!v) return; finalText=v; $("liveText").textContent=v; showHeard(v,true); $("typeIn").value=""; }
+function typedHeard(){ const v=$("typeIn").value.trim(); if(!v) return; finalText=v; $("liveText").textContent=v; showHeard(v); $("typeIn").value=""; }
 $("typeGo").onclick = typedHeard;
 $("typeIn").onkeydown = e => { if (e.key==="Enter") typedHeard(); };
-$("clearHeard").onclick = () => { $("stage").innerHTML='<div class="idle"><span class="e">🖼️</span>تكلّم وستظهر الصور هنا متحركة، واحدة بعد الأخرى</div>'; $("liveText").textContent=""; finalText=""; heardPics=[]; lastHeardText=""; curScenes=[]; };
-$("replay").onclick = () => curScenes.length && playStory($("stage"), curScenes, false);
-$("stage").onclick = () => curScenes.length && playStory($("stage"), curScenes, false);
-$("capToggle").onclick = e => { const on=document.body.classList.toggle("hidecap"); e.target.textContent = on ? "🔤 إظهار الكتابة" : "🔤 إخفاء الكتابة"; };
-$("showHeard").onclick = () => { if (!curScenes.length) return; openStory(curScenes); };
+function resetStage(){ idle($("stage"),"🖼️","تكلّم وستظهر الصور هنا متحركة، واحدة بعد الأخرى"); }
+$("clearHeard").onclick = () => { resetStage(); $("liveText").textContent=""; finalText=""; lastHeardText=""; curScenes=[]; };
+$("replay").onclick = $("stage").onclick = () => curScenes.length && playStory($("stage"), curScenes, false);
+$("showHeard").onclick = () => curScenes.length && openStory(curScenes);
+function renderPhrases(){
+  const el=$("phrases"); el.innerHTML="";
+  for (const p of (S.phrases||defaultPhrases())){
+    const b=document.createElement("button"); b.className="chip"; b.textContent=p;
+    b.onclick=()=>{ finalText=p; $("liveText").textContent=p; showHeard(p); };
+    el.appendChild(b);
+  }
+}
 
-/* ============ 5) وضع التكلم: صور → صوت ============ */
-const BOARD = {
- "⭐ سريع":[["👋","السلام عليكم"],["🙏","شكراً"],["🧏","أنا أصم، اكتب لي من فضلك"],["✅","نعم"],["❌","لا"],["⏳","انتظر قليلاً"],["🔁","أعد من فضلك ببطء"],["💡","فهمت"],["🤷","لم أفهم"],["✍️","اكتب لي"],["📱","تكلّم قرب الهاتف"],["🙋‍♂️","مع السلامة"]],
- "🙋 أنا":[["🙋","أنا"],["🫴","أريد"],["🚫","لا أريد"],["❤️","أحب"],["🧭","أبحث عن"],["🚶➡️","أذهب إلى"],["🆘","أحتاج مساعدة"],["❓","أين"],["🔢❓","كم الثمن؟"],["🕒❓","متى؟"],["❔","كيف؟"],["👉","أنت"]],
- "😊 مشاعر":[["😊","أنا سعيد"],["😢","أنا حزين"],["😩","أنا متعب"],["😨","أنا خائف"],["😠","أنا غاضب"],["🤒","أنا مريض"],["🤕","أشعر بألم"],["🍽️😋","أنا جائع"],["💧","أنا عطشان"],["🥶","أشعر بالبرد"],["🥵","أشعر بالحر"],["😴","أريد أن أنام"]],
- "🍞 أكل":[["💧","ماء"],["🍞","خبز"],["☕","قهوة"],["🍵","شاي"],["🥛","حليب"],["🍗","دجاج"],["🥩","لحم"],["🐟","سمك"],["🍲","كسكس"],["🍎","فواكه"],["🥦","خضر"],["🍰","حلوى"]],
- "📍 أماكن":[["🏠","البيت"],["🏥","المستشفى"],["💊","الصيدلية"],["🏫","المدرسة"],["💼","العمل"],["🛒","السوق"],["🏦","البنك"],["📮","البريد"],["🕌","المسجد"],["🚻","الحمام"],["🚌","موقف الحافلة"],["🚕","تاكسي"]],
- "🏥 صحة":[["🧑‍⚕️","طبيب"],["💊","دواء"],["🤯","رأسي يؤلمني"],["🫃","بطني يؤلمني"],["🦷","ضرسي يؤلمني"],["❤️","قلبي"],["🌡️","عندي حمّى"],["🤢","أشعر بالغثيان"],["💉","حقنة"],["🚑","سيارة إسعاف"],["🩸","أنزف"],["🪪","هذه بطاقتي"]],
- "👨‍👩‍👧 أشخاص":[["👩‍👧","أمي"],["👨‍👦","أبي"],["👦","أخي"],["👧","أختي"],["🧒","طفلي"],["🧑‍🤝‍🧑","صديقي"],["👨‍👩‍👧‍👦","عائلتي"],["🧑‍🏫","المعلم"],["👮","الشرطة"],["📞","اتصل بـ"]],
- "🕒 وقت":[["⏱️","الآن"],["📅","اليوم"],["📅➡️","غداً"],["⬅️📅","أمس"],["🌅","صباحاً"],["🌇","مساءً"],["🌙","ليلاً"],["⏩","بعد قليل"],["🕒","ساعة"],["⏲️","دقيقة"],["1️⃣","واحد"],["2️⃣","اثنان"]]
-};
-let curCat = Object.keys(BOARD)[0], sentence=[];
+/* ============ 7) اللوحة: صور → كلام ============ */
+const it = (e,m,f) => ({e, w: (f&&F())?f:m});
+function quickItems(){
+  const common=[it("👋","السلام عليكم"),it("🙏","شكراً"),it("✅","نعم"),it("❌","لا"),it("👍","حسناً"),it("🤷","لا أعرف"),it("⏳","انتظر قليلاً"),it("🙋‍♂️","مع السلامة")];
+  const extra = {
+    deaf:[it("🧏","أنا أصم، اكتب لي أو استعمل الصور","أنا صمّاء، اكتب لي أو استعمل الصور"),it("🔁","أعد من فضلك ببطء"),it("📱","تكلّم قرب الهاتف")],
+    mute:[it("🤐","لا أستطيع الكلام لكني أسمعك جيداً"),it("👆","سأجيبك بالصور"),it("🔁","أعد السؤال من فضلك")],
+    both:[it("🤟","أنا أصم وأبكم","أنا صمّاء وبكماء"),it("✍️","اكتب لي أو استعمل الصور"),it("🔁","أعد من فضلك ببطء")]
+  }[S.cond];
+  return extra.concat(common);
+}
+function boardData(){
+  const B = {};
+  const mine = S.cards.map(c=>({e:c.emoji, img:c.img, w:c.label}));
+  if (mine.length) B["⭐ "+N()] = null;           // placeholder للترتيب
+  B["⚡ سريع"] = quickItems();
+  B["🙋 أنا"] = [it("🙋","أنا"),it("🫴","أريد"),it("🚫","لا أريد"),it("❤️","أحب"),it("🧭","أبحث عن"),it("🚶➡️","أريد أن أذهب إلى"),it("🆘","أحتاج مساعدة"),it("❓","أين؟"),it("🔢❓","كم الثمن؟"),it("🕒❓","متى؟"),it("❔","كيف؟"),it("👉","أنت")];
+  B["😊 مشاعر"] = [it("😊","أنا سعيد","أنا سعيدة"),it("😢","أنا حزين","أنا حزينة"),it("😩","أنا متعب","أنا متعبة"),it("😨","أنا خائف","أنا خائفة"),it("😠","أنا غاضب","أنا غاضبة"),it("🤒","أنا مريض","أنا مريضة"),it("🤕","أشعر بألم"),it("🍽️😋","أنا جائع","أنا جائعة"),it("💧","أنا عطشان","أنا عطشانة"),it("🥶","أشعر بالبرد"),it("🥵","أشعر بالحر"),it("😴","أريد أن أنام")];
+  B["🍞 أكل"] = [it("💧","ماء"),it("🍞","خبز"),it("☕","قهوة"),it("🍵","شاي"),it("🥛","حليب"),it("🍗","دجاج"),it("🥩","لحم"),it("🐟","سمك"),it("🍲","كسكس"),it("🍎","فواكه"),it("🥦","خضر"),it("🍰","حلوى")];
+  B["📍 أماكن"] = [it("🏠","البيت"),it("🏥","المستشفى"),it("💊","الصيدلية"),it("🏫","المدرسة"),it("💼","العمل"),it("🛒","السوق"),it("🏦","البنك"),it("📮","البريد"),it("🕌","المسجد"),it("🚻","الحمام"),it("🚌","موقف الحافلة"),it("🚕","تاكسي")];
+  B["🏥 صحة"] = [it("🧑‍⚕️","طبيب"),it("💊","دواء"),it("🤯","رأسي يؤلمني"),it("🫃","بطني يؤلمني"),it("🦷","ضرسي يؤلمني"),it("❤️","قلبي"),it("🌡️","عندي حمّى"),it("🤢","أشعر بالغثيان"),it("💉","حقنة"),it("🚑","سيارة إسعاف"),it("🩸","أنزف"),it("🪪","هذه بطاقتي")];
+  B["👨‍👩‍👧 أشخاص"] = [it("👩‍👧","أمي"),it("👨‍👦","أبي"),it("👦","أخي"),it("👧","أختي"),it("🧒","ابني"),it("🧑‍🤝‍🧑","صديقي"),it("👨‍👩‍👧‍👦","عائلتي"),it("🧑‍⚕️","الطبيب"),it("👮","الشرطة"),it("📞","اتصل بـ")];
+  B["🕒 وقت"] = [it("⏱️","الآن"),it("📅","اليوم"),it("📅➡️","غداً"),it("⬅️📅","أمس"),it("🌅","صباحاً"),it("🌇","مساءً"),it("🌙","ليلاً"),it("⏩","بعد قليل"),it("🕒","ساعة"),it("⏲️","دقيقة"),it("1️⃣","واحد"),it("2️⃣","اثنان")];
+  if (mine.length) B["⭐ "+N()] = mine;
+  return B;
+}
+let BOARD = {}, curCat = null, sentence=[];
 function renderCats(){
+  BOARD = boardData();
+  if (!BOARD[curCat]) curCat = Object.keys(BOARD)[0];
   const c=$("cats"); c.innerHTML="";
   for (const k of Object.keys(BOARD)){
     const b=document.createElement("button"); b.className="chip"; b.textContent=k; b.setAttribute("aria-pressed",k===curCat);
-    b.onclick=()=>{curCat=k;renderCats();renderGrid();}; c.appendChild(b);
+    b.onclick=()=>{curCat=k;renderCats();}; c.appendChild(b);
   }
+  renderGrid();
 }
 function renderGrid(){
   const g=$("grid"); g.innerHTML="";
-  for (const [e,w] of BOARD[curCat]){
-    const b=document.createElement("button"); b.innerHTML=`<span class="e">${e}</span><span class="w"></span>`; b.querySelector(".w").textContent=w;
-    b.onclick=()=>{ sentence.push({e,w}); renderSentence(); }; g.appendChild(b);
+  for (const p of BOARD[curCat]){
+    const b=document.createElement("button");
+    if (p.img){ const im=document.createElement("img"); im.className="e"; im.src=p.img; im.alt=""; b.appendChild(im); }
+    else { const e=document.createElement("span"); e.className="e"; e.textContent=p.e||"🖼️"; b.appendChild(e); }
+    const w=document.createElement("span"); w.className="w"; w.textContent=p.w; b.appendChild(w);
+    b.onclick=()=>{ sentence.push(p); renderSentence(); if (canSpeakAloud() && S.speakTap) speak(p.w); };
+    g.appendChild(b);
   }
 }
 function renderSentence(){
   const s=$("sentence"); s.innerHTML="";
   sentence.forEach((p,i)=>{ const el=picEl(p); el.title="اضغط للحذف"; el.onclick=()=>{sentence.splice(i,1);renderSentence();}; s.appendChild(el); });
 }
-const sentText = () => sentence.map(p=>p.w).join(" ").replace(/\s+([؟?])/g,"$1");
+const sentText = () => sentence.map(p=>p.w).join("، ");
 function speak(text){
-  if (window.AndroidBridge){ try{ AndroidBridge.speak(text,$("lang").value); return true; }catch(e){} }
+  if (window.AndroidBridge){ try{ AndroidBridge.speak(text,S.lang); return true; }catch(e){} }
   if (!("speechSynthesis" in window)) return false;
   try{
     speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text);
-    const lang=$("lang").value; u.lang=lang; u.rate=.95;
-    const vs=speechSynthesis.getVoices(); const base=lang.split("-")[0];
-    const v=vs.find(v=>v.lang===lang)||vs.find(v=>v.lang&&v.lang.startsWith(base));
-    if (v) u.voice=v;
+    const u=new SpeechSynthesisUtterance(text); u.lang=S.lang; u.rate=+S.rate;
+    const vs=speechSynthesis.getVoices(), base=S.lang.split("-")[0];
+    const v=vs.find(v=>v.lang===S.lang)||vs.find(v=>v.lang&&v.lang.startsWith(base)); if (v) u.voice=v;
     speechSynthesis.speak(u); return true;
   }catch(e){ return false; }
 }
 $("meAdd").onclick=()=>{ const v=$("meType").value.trim(); if(!v) return;
-  const ps=toPictos(v); if(!ps.length) ps.push({w:v,e:null}); ps.forEach(p=>sentence.push(p)); $("meType").value=""; renderSentence(); };
+  const ps=toPictos(v).filter(p=>p.e||p.img); sentence.push(ps.length?{e:ps[0].e,img:ps[0].img,w:v}:{e:null,w:v}); $("meType").value=""; renderSentence(); };
 $("meType").onkeydown=e=>{ if(e.key==="Enter") $("meAdd").click(); };
-$("sayBtn").onclick=()=>{ if(!sentence.length) return; const t=sentText(); speak(t); addLog("me",t,sentence); };
-$("showMe").onclick=()=>{ if(!sentence.length) return; const t=sentText(); speak(t); addLog("me",t,sentence); openBig(sentence.filter(p=>p.e).map(p=>p.e).join(" "), t); };
+$("sayBtn").onclick=()=>{ if(!sentence.length) return; const t=sentText(); speak(t); addLog("me",t,sentence.map(sceneEmoji)); };
+$("showMe").onclick=()=>{ if(!sentence.length) return; const t=sentText(); if (canSpeakAloud()) speak(t); addLog("me",t,sentence.map(sceneEmoji));
+  openStory(sentence.map(p=>({e:p.e,img:p.img,c:p.w,a:p.img?"grow":animFor(p)}))); };
 $("undoBtn").onclick=()=>{ sentence.pop(); renderSentence(); };
 $("clearMe").onclick=()=>{ sentence=[]; renderSentence(); };
+function sosText(){
+  return {deaf:g("أرجوك ساعدني! أنا أصم ولا أسمع. اكتب لي على الهاتف أو استعمل الصور.","أرجوك ساعديني! أنا صمّاء ولا أسمع. اكتبوا لي على الهاتف أو استعملوا الصور."),
+          mute:"أرجوكم ساعدوني! لا أستطيع الكلام لكني أسمعكم جيداً. أحتاج مساعدة عاجلة.",
+          both:g("أرجوكم ساعدوني! أنا أصم وأبكم. أحتاج مساعدة عاجلة. اكتبوا لي على الهاتف.","أرجوكم ساعدوني! أنا صمّاء وبكماء. أحتاج مساعدة عاجلة. اكتبوا لي على الهاتف.")}[S.cond];
+}
 $("sosBtn").onclick=()=>{
-  const t="أرجوك ساعدني! أنا أصم ولا أستطيع السمع. أحتاج مساعدة عاجلة. اكتب لي على الهاتف.";
-  speak(t); addLog("me",t,[{e:"🆘"}]); openBig("🆘🧏", t, true);
+  let t=sosText();
+  if (S.emPhone) t+=` اتصلوا من فضلكم بـ ${S.emName||"عائلتي"}: ${S.emPhone.split("").join(" ")}`;
+  speak(t); addLog("me",sosText(),["🆘"]);
+  openBig("🆘"+(S.cond==="mute"?"🤐":"🧏"), sosText(), true);
+  if (S.emPhone){ const a=$("bigPhone"); a.hidden=false; a.href="tel:"+S.emPhone.replace(/[^\d+]/g,""); a.textContent="📞 "+(S.emName?S.emName+": ":"")+S.emPhone; }
 };
 
-/* ============ 6) شاشة العرض الكبيرة ============ */
-function openBig(e,t,sos){ $("bigStage").hidden=true; $("bigE").hidden=false; $("bigT").hidden=false;
+/* ============ 8) الشاشات الكاملة ============ */
+function openBig(e,t,sos){ $("bigStage").hidden=true; $("bigE").hidden=false; $("bigT").hidden=false; $("bigPhone").hidden=true;
   $("big").classList.remove("storymode"); $("bigE").textContent=e; $("bigT").textContent=t; $("big").classList.toggle("sosmode",!!sos); $("big").classList.add("show"); }
-// شاشة كاملة لأمي: الصور فقط، تتكرر تلقائياً
-function openStory(scenes){ $("bigE").hidden=true; $("bigT").hidden=true; $("bigStage").hidden=false;
+function openStory(scenes){ $("bigE").hidden=true; $("bigT").hidden=true; $("bigPhone").hidden=true; $("bigStage").hidden=false;
   $("big").classList.remove("sosmode"); $("big").classList.add("show","storymode"); playStory($("bigStage"), scenes, true); }
 $("bigClose").onclick=()=>{ $("big").classList.remove("show"); clearInterval(timers.get($("bigStage"))); try{speechSynthesis.cancel();}catch(e){} };
-
-/* ============ 7) التبويبات والإعدادات ============ */
-document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
-  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===t));
-  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="v-"+t.dataset.v));
-  if (t.dataset.v==="history") renderLog();
-});
-let fs=1; try{ fs=parseFloat(localStorage.getItem("sila-fs"))||1; }catch(e){}
-const applyFs=()=>{ document.documentElement.style.setProperty("--fs",fs); try{localStorage.setItem("sila-fs",fs);}catch(e){} };
-$("fsUp").onclick=()=>{ fs=Math.min(1.6,fs+.1); applyFs(); };
-$("fsDown").onclick=()=>{ fs=Math.max(.8,fs-.1); applyFs(); };
-$("contrast").onclick=e=>{ const on=document.body.classList.toggle("contrast"); e.target.setAttribute("aria-pressed",on); };
 $("aboutBtn").onclick=()=>$("about").classList.add("show");
 $("aboutClose").onclick=()=>$("about").classList.remove("show");
 $("about").onclick=e=>{ if(e.target.id==="about") $("about").classList.remove("show"); };
-$("clearLog").onclick=()=>{ LOG=[]; saveLog(); renderLog(); };
-if ("speechSynthesis" in window) speechSynthesis.onvoiceschanged=()=>{};
-if (!SR) noticeMic("⚠️ متصفحك لا يدعم التعرف على الكلام. افتح التطبيق في <b>Google Chrome</b> أو <b>Edge</b>، أو اكتب الجملة يدوياً.");
-applyFs(); renderCats(); renderGrid(); renderLog(); updateKeyUI();
-if ("serviceWorker" in navigator && location.protocol === "https:" && !window.AndroidBridge) {
-  navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+/* ============ 9) التبويبات وتطبيق الملف الشخصي ============ */
+function showTab(v){
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x.dataset.v===v));
+  document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="v-"+v));
+  if (v==="history") renderLog();
+  if (v!=="listen" && listening) stopRec();
 }
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showTab(t.dataset.v));
+function applyProfile(){
+  const n=N();
+  document.documentElement.style.setProperty("--fs",S.fs);
+  document.body.classList.toggle("contrast",!!S.contrast);
+  document.body.classList.toggle("hidecap",!S.caps);
+  $("lang").value=S.lang;
+  $("subtitle").textContent = canHear()
+    ? `${n} ${g("يختار الصور… والهاتف يتكلم عنه","تختار الصور… والهاتف يتكلم عنها")}`
+    : `كلامك يصبح صوراً متحركة ${g("يفهمها","تفهمها")} ${n}`;
+  // التبويبات حسب الحالة
+  document.querySelector('.tab[data-v="listen"]').hidden = canHear();
+  $("tabSpeak").textContent = canSpeakAloud() ? "تكلّم عن "+n : "لوحة "+n;
+  $("tabSpeakIcon").textContent = canSpeakAloud() ? "🗣️" : "👆";
+  $("stageTitle").textContent = `🎬 ما ${g("يراه","تراه")} ${n}`;
+  $("boardTitle").textContent = canSpeakAloud()
+    ? `🗣️ ${n} ${g("يختار الصور","تختار الصور")} والهاتف ينطقها — اضغط على صورة في الجملة لحذفها`
+    : `👆 ${n} ${g("يشير","تشير")} إلى الصور ${g("ليقول","لتقول")} ما ${g("يريد","تريد")} — اضغط على صورة في الجملة لحذفها`;
+  $("sentence").dataset.empty = "اضغط على الصور بالأسفل لتكوين جملة…";
+  $("sayBtn").hidden = !canSpeakAloud();
+  $("showMe").textContent = canSpeakAloud() ? "⛶ انطق واعرض" : "⛶ اعرضها";
+  $("meTypeRow").hidden = !S.reads;
+  $("ttsBox").querySelector(".tog").hidden = !canSpeakAloud();
+  const active = document.querySelector(".tab[aria-selected='true']");
+  if (!active || active.hidden) showTab(canHear() ? "speak" : "listen");
+  if (!listening) idleStatus();
+  rebuildDict(); renderCats(); renderPhrases(); updateKeyUI();
+}
+
+/* ============ 10) شاشة الإعدادات ============ */
+$("sLang").innerHTML = $("lang").innerHTML;
+function segBind(id,key,num){
+  $(id).querySelectorAll("button").forEach(b=>b.onclick=()=>{ S[key]=num?+b.dataset.v:b.dataset.v; save(); syncSettings(); applyProfile(); if(key==="gender"||key==="cond"){ clearCache(); sentence=[]; renderSentence(); } });
+}
+function syncSeg(id,val){ $(id).querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v)===String(val))); }
+function syncSettings(){
+  if (document.activeElement!==$("sName")) $("sName").value=S.name;
+  syncSeg("sGender",S.gender); syncSeg("sCond",S.cond); syncSeg("sSpeed",S.speed); syncSeg("sFs",S.fs); syncSeg("sRate",S.rate);
+  $("sReads").checked=S.reads; $("sCaps").checked=S.caps; $("sFlash").checked=S.flash; $("sWake").checked=S.wake; $("sContrast").checked=S.contrast; $("sSpeakTap").checked=S.speakTap;
+  $("sLang").value=S.lang; $("sEmName").value=S.emName; $("sEmPhone").value=S.emPhone;
+  if (document.activeElement!==$("sPhrases")) $("sPhrases").value=(S.phrases||defaultPhrases()).join("\n");
+  renderCardList();
+}
+segBind("sGender","gender"); segBind("sCond","cond"); segBind("sSpeed","speed",true); segBind("sFs","fs",true); segBind("sRate","rate",true);
+$("sName").oninput=e=>{ S.name=e.target.value; save(); applyProfile(); };
+$("sName").onchange=()=>clearCache();
+for (const [id,key] of [["sReads","reads"],["sCaps","caps"],["sFlash","flash"],["sWake","wake"],["sContrast","contrast"],["sSpeakTap","speakTap"]])
+  $(id).onchange=e=>{ S[key]=e.target.checked; if(key==="reads") S.caps=S.reads||S.caps; save(); syncSettings(); applyProfile(); };
+$("sLang").onchange=$("lang").onchange=e=>{ S.lang=e.target.value; save(); syncSettings(); applyProfile(); if (listening){ stopRec(); startRec(); } };
+$("sEmName").oninput=e=>{ S.emName=e.target.value.trim(); save(); };
+$("sEmPhone").oninput=e=>{ S.emPhone=e.target.value.trim(); save(); };
+$("sPhrases").oninput=e=>{ const l=e.target.value.split("\n").map(x=>x.trim()).filter(Boolean); S.phrases=l.length?l:null; save(); renderPhrases(); };
+$("setBtn").onclick=()=>{ syncSettings(); $("welcome").hidden=true; $("settings").classList.add("show"); };
+$("setClose").onclick=()=>{ $("settings").classList.remove("show"); if (firstRun){ firstRun=false; save(); toast("✓ تم الحفظ — مرحباً بك!"); } };
+
+// --- الصور الخاصة ---
+let pendingImg=null, cType="person";
+$("cType").querySelectorAll("button").forEach(b=>b.onclick=()=>{ cType=b.dataset.v; syncSeg("cType",cType); });
+function resizeImage(file, size){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader(); fr.onerror=rej;
+    fr.onload=()=>{ const im=new Image(); im.onerror=rej; im.onload=()=>{
+      const c=document.createElement("canvas"); c.width=c.height=size; const x=c.getContext("2d");
+      const s=Math.min(im.width,im.height), sx=(im.width-s)/2, sy=Math.max(0,(im.height-s)/2 - s*0.08); // قص مربع، مرفوع قليلاً نحو الوجه
+      x.drawImage(im,sx,sy,s,s,0,0,size,size); res(c.toDataURL("image/jpeg",0.82)); }; im.src=fr.result; };
+    fr.readAsDataURL(file);
+  });
+}
+$("cFile").onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{ pendingImg=await resizeImage(f,200); $("cPick").querySelector("span").innerHTML=`<img src="${pendingImg}" alt="">`; }
+  catch(err){ $("cMsg").textContent="⚠️ تعذّر قراءة الصورة"; }
+};
+function resetCardForm(){ pendingImg=null; $("cFile").value=""; $("cPickTxt").innerHTML="📷<br>اختر صورة"; $("cEmoji").value=""; $("cLabel").value=""; $("cWords").value=""; }
+$("cAdd").onclick=()=>{
+  const label=$("cLabel").value.trim(), emoji=$("cEmoji").value.trim();
+  if (!label){ $("cMsg").textContent="⚠️ اكتب الاسم"; return; }
+  if (!pendingImg && !emoji){ $("cMsg").textContent="⚠️ اختر صورة أو اكتب إيموجي"; return; }
+  const card={id:"c"+Date.now().toString(36), type:cType, label, words:$("cWords").value.trim(), img:pendingImg, emoji:emoji||null};
+  S.cards.push(card);
+  if (!save()){ S.cards.pop(); return; }
+  clearCache(); resetCardForm(); $("cMsg").textContent="✓ أُضيف: "+label; renderCardList(); applyProfile();
+};
+function renderCardList(){
+  const el=$("cardList"); el.innerHTML="";
+  if (!S.cards.length){ el.innerHTML='<span class="small">لا توجد صور خاصة بعد.</span>'; return; }
+  for (const c of S.cards){
+    const d=document.createElement("div"); d.className="citem";
+    const ic = c.img ? Object.assign(document.createElement("img"),{src:c.img,alt:""}) : Object.assign(document.createElement("span"),{textContent:c.emoji});
+    ic.className="ic"; d.appendChild(ic);
+    const tx=document.createElement("div"); tx.className="tx";
+    tx.innerHTML="<b></b><span></span>"; tx.querySelector("b").textContent=(c.type==="person"?"🧑 ":"📦 ")+c.label;
+    tx.querySelector("span").textContent=c.words?("يظهر عند: "+splitWords(c.words).join("، ")):"";
+    d.appendChild(tx);
+    const del=document.createElement("button"); del.textContent="🗑️"; del.title="حذف";
+    del.onclick=()=>{ S.cards=S.cards.filter(x=>x.id!==c.id); save(); clearCache(); renderCardList(); applyProfile(); };
+    d.appendChild(del); el.appendChild(d);
+  }
+}
+// --- الذكاء الاصطناعي ---
+$("saveKey").onclick=()=>{ apiKey=$("apiKey").value.trim(); ls.set("sila-key",apiKey); $("apiKey").value=""; updateKeyUI(); toast(apiKey?"✓ حُفظ مفتاح Claude":"حُذف مفتاح Claude"); };
+$("saveGem").onclick=()=>{ gemKey=$("gemKey").value.trim(); ls.set("sila-gem",gemKey); $("gemKey").value=""; updateKeyUI(); toast(gemKey?"✓ حُفظ مفتاح Gemini":"حُذف مفتاح Gemini"); };
+$("aiProv").onchange=e=>{ aiProv=e.target.value; ls.set("sila-prov",aiProv); updateKeyUI(); };
+// --- البيانات ---
+$("clearCache").onclick=()=>{ clearCache(); toast("✓ مُسحت الجمل المحفوظة"); };
+$("clearLog").onclick=$("clearLog2").onclick=()=>{ LOG=[]; saveLog(); renderLog(); toast("✓ مُسحت المحادثة"); };
+let resetArmed=false;
+$("resetAll").onclick=e=>{
+  if (!resetArmed){ resetArmed=true; e.target.textContent="⚠️ اضغط مرة أخرى للتأكيد"; setTimeout(()=>{ resetArmed=false; e.target.textContent="⚠️ إعادة ضبط كل شيء"; },4000); return; }
+  ["sila-settings","sila-log","sila-cache","sila-key","sila-gem","sila-prov"].forEach(k=>ls.set(k,""));
+  location.reload();
+};
+
+/* ============ 11) البدء ============ */
+resetStage(); applyProfile(); renderSentence();
+if (!SR && !canHear()) noticeMic("⚠️ هذا المتصفح لا يدعم التعرف على الكلام. استخدم <b>Google Chrome</b>، أو اكتب الجملة يدوياً.");
+if (firstRun){ syncSettings(); $("welcome").hidden=false; $("settings").classList.add("show"); }
+if ("serviceWorker" in navigator && location.protocol === "https:" && !window.AndroidBridge) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
 </html>
