@@ -158,7 +158,7 @@ body.contrast .stage{background:#111}
 .big.storymode{background:#fffaf0;color:#1d2433}
 .big .be{font-size:min(18vw,120px);line-height:1.1}
 .big .bt{font-size:min(8vw,56px);font-weight:700}
-.big .bphone{font-size:min(7vw,44px);font-weight:700;direction:ltr;background:rgba(255,255,255,.18);border-radius:16px;padding:8px 18px;color:inherit;text-decoration:none}
+.big .bphone{font-size:min(7vw,44px);font-weight:700;background:rgba(255,255,255,.18);border-radius:16px;padding:8px 18px;color:inherit;text-decoration:none}
 .big .close{position:absolute;top:14px;left:14px;background:rgba(0,0,0,.2);border:0;border-radius:12px;padding:10px 14px;color:inherit}
 .big.sosmode{background:var(--danger);color:#fff;animation:blink 1s infinite}
 @keyframes blink{50%{filter:brightness(1.3)}}
@@ -310,7 +310,7 @@ footer a{color:inherit;font-weight:500}
     </div>
   </section>
 
-  <footer>صِلة V1.4 — تطوير <a href="https://www.titterisoft.com" target="_blank" rel="noopener">TitteriSoft</a> · www.titterisoft.com</footer>
+  <footer>صِلة V1.5 — تطوير <a href="https://www.titterisoft.com" target="_blank" rel="noopener">TitteriSoft</a> · www.titterisoft.com</footer>
 </div>
 
 <!-- full screen -->
@@ -327,7 +327,7 @@ footer a{color:inherit;font-weight:500}
   <div class="box">
     <div class="mark">🤟</div>
     <h3>صِلة</h3>
-    <div class="small">الإصدار V1.4</div>
+    <div class="small">الإصدار V1.5</div>
     <p>تطبيق يحوّل الكلام إلى صور متحركة، ويحوّل الصور إلى كلام، ليتواصل الأشخاص الصم والبكم — خاصة كبار السن الذين لا يقرؤون — مع من حولهم بسهولة وكرامة.</p>
     <div class="dev">
       <span class="small">تطوير</span>
@@ -1169,7 +1169,7 @@ $("showMe").onclick=()=>{ if(!sentence.length) return; const t=sentText(); if (c
 $("undoBtn").onclick=()=>{ sentence.pop(); renderSentence(); };
 $("clearMe").onclick=()=>{ sentence=[]; renderSentence(); };
 function sosText(){
-  return {deaf:g("أرجوك ساعدني! أنا أصم ولا أسمع. اكتب لي على الهاتف أو استعمل الصور.","أرجوك ساعديني! أنا صمّاء ولا أسمع. اكتبوا لي على الهاتف أو استعملوا الصور."),
+  return {deaf:g("أرجوكم ساعدوني! أنا أصم ولا أسمع. اكتبوا لي على الهاتف أو استعملوا الصور.","أرجوكم ساعدوني! أنا صمّاء ولا أسمع. اكتبوا لي على الهاتف أو استعملوا الصور."),
           mute:"أرجوكم ساعدوني! لا أستطيع الكلام لكني أسمعكم جيداً. أحتاج مساعدة عاجلة.",
           both:g("أرجوكم ساعدوني! أنا أصم وأبكم. أحتاج مساعدة عاجلة. اكتبوا لي على الهاتف.","أرجوكم ساعدوني! أنا صمّاء وبكماء. أحتاج مساعدة عاجلة. اكتبوا لي على الهاتف.")}[S.cond];
 }
@@ -1178,7 +1178,7 @@ $("sosBtn").onclick=()=>{
   if (S.emPhone) t+=` اتصلوا من فضلكم بـ ${S.emName||"عائلتي"}: ${S.emPhone.split("").join(" ")}`;
   speak(t); addLog("me",sosText(),["🆘"]);
   openBig("🆘"+(S.cond==="mute"?"🤐":"🧏"), sosText(), true);
-  if (S.emPhone){ const a=$("bigPhone"); a.hidden=false; a.href="tel:"+S.emPhone.replace(/[^\d+]/g,""); a.textContent="📞 "+(S.emName?S.emName+": ":"")+S.emPhone; }
+  if (S.emPhone){ const a=$("bigPhone"); a.hidden=false; a.href="tel:"+S.emPhone.replace(/[^\d+]/g,""); a.textContent="📞 "+(S.emName||"اتصلوا بـ"); const num=document.createElement("bdi"); num.dir="ltr"; num.textContent=S.emPhone; num.style.cssText="display:block;white-space:nowrap;font-size:1.15em;letter-spacing:1px"; a.appendChild(num); }
 };
 
 /* ============ 8) الشاشات الكاملة ============ */
