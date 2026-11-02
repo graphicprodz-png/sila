@@ -15,6 +15,7 @@ import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -45,6 +46,8 @@ public class MainActivity extends Activity {
     private static final int REQ_FILE = 2;
     private static final int REQ_SAVE = 3;
     private static final int REQ_DIALOG = 4;
+    private static final int REQ_MIC_WEB = 5;
+    private PermissionRequest pendingWebPermission;
     private static final String HOST = "appassets.androidplatform.net";
     private static final String GOOGLE_PKG = "com.google.android.googlequicksearchbox";
 
@@ -96,6 +99,24 @@ public class MainActivity extends Activity {
         });
 
         web.setWebChromeClient(new WebChromeClient() {
+            // الاستماع بالذكاء الاصطناعي: الصفحة تطلب الميكروفون (getUserMedia)
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                runOnUiThread(() -> {
+                    boolean audio = false;
+                    for (String r : request.getResources())
+                        if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(r)) audio = true;
+                    if (!audio) { request.deny(); return; }
+                    if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                        request.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+                    } else {
+                        if (pendingWebPermission != null) pendingWebPermission.deny();
+                        pendingWebPermission = request;
+                        requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_MIC_WEB);
+                    }
+                });
+            }
+
             @Override
             public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
                 if (fileCallback != null) fileCallback.onReceiveValue(null);
@@ -318,6 +339,15 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
+        if (requestCode == REQ_MIC_WEB) {
+            if (pendingWebPermission != null) {
+                if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED)
+                    pendingWebPermission.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+                else pendingWebPermission.deny();
+                pendingWebPermission = null;
+            }
+            return;
+        }
         if (requestCode != REQ_MIC) return;
         if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) {
             startRecognition(pendingLang);

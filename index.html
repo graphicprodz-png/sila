@@ -63,6 +63,8 @@ header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .status{flex:1;min-width:200px}
 .status b{font-size:1.15em;display:block}
 .status .hint{color:var(--muted);font-size:.9em;font-weight:300}
+.meter{height:10px;border-radius:99px;background:var(--soft);overflow:hidden;margin-top:12px}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#10b981,#f59e0b,#dc2626);transition:width .08s;border-radius:99px}
 .live-text{font-size:1.7em;font-weight:700;min-height:1.6em;margin:10px 0 4px;word-break:break-word}
 .live-text .interim{color:var(--muted);font-weight:300}
 .phrases{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px}
@@ -258,6 +260,7 @@ footer a{color:inherit;font-weight:500}
         <button class="mic" id="micBtn" aria-label="ابدأ الاستماع">🎤</button>
         <div class="status"><b id="statusText"></b><span class="hint" id="statusHint"></span></div>
       </div>
+      <div class="meter" id="meter" hidden title="مستوى الصوت"><i id="meterBar"></i></div>
       <div class="live-text" id="liveText" aria-live="polite"></div>
       <div class="phrases" id="phrases"></div>
     </div>
@@ -307,7 +310,7 @@ footer a{color:inherit;font-weight:500}
     </div>
   </section>
 
-  <footer>صِلة V1.2 — تطوير <a href="https://www.titterisoft.com" target="_blank" rel="noopener">TitteriSoft</a> · www.titterisoft.com</footer>
+  <footer>صِلة V1.3 — تطوير <a href="https://www.titterisoft.com" target="_blank" rel="noopener">TitteriSoft</a> · www.titterisoft.com</footer>
 </div>
 
 <!-- full screen -->
@@ -324,7 +327,7 @@ footer a{color:inherit;font-weight:500}
   <div class="box">
     <div class="mark">🤟</div>
     <h3>صِلة</h3>
-    <div class="small">الإصدار V1.2</div>
+    <div class="small">الإصدار V1.3</div>
     <p>تطبيق يحوّل الكلام إلى صور متحركة، ويحوّل الصور إلى كلام، ليتواصل الأشخاص الصم والبكم — خاصة كبار السن الذين لا يقرؤون — مع من حولهم بسهولة وكرامة.</p>
     <div class="dev">
       <span class="small">تطوير</span>
@@ -397,8 +400,8 @@ footer a{color:inherit;font-weight:500}
         <label class="field">لغة الكلام<select id="sLang"></select></label>
         <div id="srBox" hidden>
           <div class="field">طريقة الاستماع</div>
-          <div class="seg" id="sSr"><button data-v="auto">🔁 مستمر</button><button data-v="dialog">🎙️ نافذة Google</button></div>
-          <span class="small">«مستمر» يستمع دون توقف. «نافذة Google» تفتح نافذة لكل جملة — أضمن على بعض الهواتف، ويتحوّل التطبيق إليها تلقائياً إن تكررت الأخطاء.</span>
+          <div class="seg" id="sSr"><button data-v="auto">🔁 مستمر</button><button data-v="dialog">🎙️ نافذة Google</button><button data-v="ai">🤖 ذكاء اصطناعي</button></div>
+          <span class="small">«مستمر» و«نافذة Google» تستعملان خدمة Google للكلام في الهاتف. «🤖 ذكاء اصطناعي» يسجّل الكلام بنفسه ويرسله إلى Gemini فيفهمه ويحوّله لصور — يعمل على أي هاتف ويفهم الدارجة أفضل، ويحتاج مفتاح Gemini المجاني (قسم «الذكاء الاصطناعي» أسفله).</span>
           <span class="small" id="srInfo" style="display:block"></span>
         </div>
         <div id="ttsBox">
@@ -496,6 +499,7 @@ if (window.AndroidBridge) {
 const $ = id => document.getElementById(id);
 const ls={get:k=>{try{return localStorage.getItem(k)||"";}catch(e){return "";}},
           set:(k,v)=>{try{ v?localStorage.setItem(k,v):localStorage.removeItem(k); return true;}catch(e){ return false; }}};
+const srModeGet = () => { const m=ls.get("sila-srmode")||"auto"; return (m==="dialog" && !window.AndroidBridge) ? "auto" : m; };
 function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("show"),2200); }
 
 /* ============ 1) الإعدادات ============ */
@@ -864,11 +868,12 @@ function updateKeyUI(){
     + ` · جمل محفوظة: ${Object.keys(CACHE).length}`;
   $("apiKey").placeholder = apiKey ? "✓ محفوظ — اكتب مفتاحاً جديداً لتغييره" : "sk-ant-...";
   $("gemKey").placeholder = gemKey ? "✓ محفوظ — اكتب مفتاحاً جديداً لتغييره" : "AIza...";
+  if (typeof syncSr==="function") syncSr();
 }
 
 /* ============ 6) الاستماع: كلام → صور ============ */
 let lastHeardText="", reqId=0, curScenes=[];
-async function showHeard(text){
+async function showHeard(text, pre){
   const pics = toPictos(text);
   lastHeardText=text;
   const my = ++reqId;
@@ -878,6 +883,10 @@ async function showHeard(text){
     $("modeBadge").textContent=badge;
   };
   flash();
+  if (pre && pre.sc && pre.sc.length){
+    cachePut(text, pre.sc); setScenes(pre.sc, "🤖 "+PROV_NAME[pre.src]);
+    addLog("heard", text, curScenes.map(sceneEmoji)); return;
+  }
   const cached = providers().length ? cacheGet(text) : null;
   if (cached){ setScenes(cached,"🧠 محفوظة"); }
   else {
@@ -903,6 +912,7 @@ async function keepAwake(on){
   }catch(e){ wakeLock=null; }
 }
 function startRec(){
+  if (srModeGet()==="ai"){ aiStart(); return; }
   if (!SR){ noticeMic("⚠️ هذا المتصفح لا يدعم التعرف على الكلام. استخدم <b>Google Chrome</b>، أو اكتب الجملة يدوياً."); return; }
   rec = new SR(); rec.lang = S.lang; rec.continuous = true; rec.interimResults = true;
   rec.onresult = ev => {
@@ -922,7 +932,7 @@ function startRec(){
     else if (c==="network"){ setStatus("⚠️ لا يوجد اتصال بالإنترنت","التعرّف على الكلام يحتاج الإنترنت — يمكنك الكتابة يدوياً"); }
     else if (c==="language"){ setStatus("⚠️ هذه اللهجة غير مدعومة على هذا الهاتف","أجرّب العربية العامة تلقائياً… أو اختر «العربية الفصحى» من القائمة"); }
     else if (c==="audio"){ setStatus("⚠️ الميكروفون مشغول","ربما يستعمله تطبيق آخر (مكالمة، مسجّل صوت…)"); }
-    else if (c==="switched"){ setStatus("🔄 أنتقل إلى نافذة Google للاستماع","طريقة أضمن على هذا الهاتف — يمكنك تغييرها من الإعدادات"); toast("🔄 تم التحويل إلى نافذة Google للاستماع"); syncSr(); }
+    else if (c==="switched"){ setStatus("🔄 أنتقل إلى نافذة Google للاستماع","إن لم تنجح، اختر «🤖 ذكاء اصطناعي» في ⚙️ الإعدادات ← طريقة الاستماع"); toast("🔄 تم التحويل إلى نافذة Google للاستماع"); syncSr(); }
     else if (c==="busy"||c==="server"){ setStatus("⏳ أعيد تشغيل الاستماع…","رمز الخطأ: "+(e.detail||c)); }
   };
   rec.onstate = st => {
@@ -939,8 +949,119 @@ function startRec(){
   keepAwake(true);
 }
 function stopRec(){
+  if (ai.on || ai.stream) aiStop();
   listening=false; try{ rec && rec.stop(); }catch(e){}
   $("micBtn").classList.remove("on"); $("micBtn").textContent="🎤"; idleStatus(); keepAwake(false);
+}
+
+/* ============ 6ب) الاستماع بالذكاء الاصطناعي: تسجيل ← Gemini ← نص + صور ============ */
+const AUDIO_RULES = `
+المدخل الآن تسجيل صوتي لشخص يتكلم (غالباً بالدارجة الجزائرية، وقد يخلط كلمات فرنسية).
+1) اكتب في "text" ما قيل كما نُطق بالضبط (الدارجة بالحروف العربية، والكلمات الفرنسية بالحروف اللاتينية).
+2) ثم أنشئ "scenes" حسب القواعد السابقة.
+إن كان التسجيل صمتاً أو ضجيجاً دون كلام واضح أجب: {"text":"","scenes":[]}
+أجب بـ JSON فقط: {"text":"...","scenes":[...]}`;
+async function askGeminiAudio(b64data){
+  let last;
+  for (const model of GEMINI_MODELS){
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:"POST",
+      headers:{"content-type":"application/json","x-goog-api-key":gemKey},
+      body:JSON.stringify({systemInstruction:{parts:[{text:buildSys()+"\n"+AUDIO_RULES}]},
+        contents:[{role:"user",parts:[{inlineData:{mimeType:"audio/wav",data:b64data}},{text:"حلّل هذا التسجيل."}]}],
+        generationConfig:{responseMimeType:"application/json",maxOutputTokens:700,temperature:0.2}})});
+    if (r.status===404){ last=new Error("gemini 404"); continue; }
+    if (!r.ok) throw new Error("gemini "+r.status);
+    const j = await r.json();
+    const t = ((j.candidates||[])[0]?.content?.parts||[]).map(p=>p.text||"").join("");
+    const m = t.match(/\{[\s\S]*\}/); if (!m) throw new Error("bad json");
+    const o = JSON.parse(m[0]); const text = String(o.text||"").trim();
+    let sc=[]; try{ sc = parseScenes(JSON.stringify({scenes:o.scenes||[]})); }catch(e){}
+    return {text, sc};
+  }
+  throw last;
+}
+function encodeWav(chunks, inRate, outRate){
+  const total = chunks.reduce((n,c)=>n+c.length,0), data = new Float32Array(total);
+  let o=0; for (const c of chunks){ data.set(c,o); o+=c.length; }
+  const ratio = inRate/outRate, n = Math.floor(total/ratio), pcm = new Int16Array(n);
+  for (let i=0;i<n;i++){
+    const a=Math.floor(i*ratio), b=Math.max(a+1,Math.min(total,Math.floor((i+1)*ratio)));
+    let sum=0; for (let k=a;k<b;k++) sum+=data[k];
+    const v=Math.max(-1,Math.min(1,sum/(b-a))); pcm[i]= v<0 ? v*0x8000 : v*0x7fff;
+  }
+  const buf=new ArrayBuffer(44+n*2), dv=new DataView(buf);
+  const w=(p,str)=>{ for (let i=0;i<str.length;i++) dv.setUint8(p+i,str.charCodeAt(i)); };
+  w(0,"RIFF"); dv.setUint32(4,36+n*2,true); w(8,"WAVE"); w(12,"fmt "); dv.setUint32(16,16,true);
+  dv.setUint16(20,1,true); dv.setUint16(22,1,true); dv.setUint32(24,outRate,true); dv.setUint32(28,outRate*2,true);
+  dv.setUint16(32,2,true); dv.setUint16(34,16,true); w(36,"data"); dv.setUint32(40,n*2,true);
+  new Int16Array(buf,44).set(pcm);
+  return buf;
+}
+function toB64(buf){ const u=new Uint8Array(buf); let s=""; for (let i=0;i<u.length;i+=0x8000) s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(s); }
+const ai = {on:false, busy:false, stream:null, ctx:null, src:null, proc:null, chunks:[], speech:false, t0:0, sp0:0, lastVoice:0, noise:0, calib:[], rate:48000};
+function aiReset(){ ai.chunks=[]; ai.speech=false; ai.t0=performance.now(); ai.lastVoice=0; ai.calib=[]; ai.noise=0; }
+async function aiStart(){
+  $("micNotice").classList.remove("show");
+  if (!gemKey){ noticeMic("🤖 الاستماع بالذكاء الاصطناعي يحتاج مفتاح Gemini المجاني: افتح ⚙️ الإعدادات ← قسم «الذكاء الاصطناعي» وألصق المفتاح."); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ noticeMic("⚠️ هذا المتصفح لا يسمح بتسجيل الصوت."); return; }
+  setStatus("⏳ أجهّز الميكروفون…","انتظر لحظة ثم تكلّم");
+  try{ ai.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}); }
+  catch(e){ idleStatus(); noticeMic("🎤 لم يُسمح باستخدام الميكروفون. افتح إعدادات الهاتف ← التطبيقات ← صِلة ← الأذونات ← الميكروفون ← سماح."); return; }
+  const AC = window.AudioContext||window.webkitAudioContext;
+  ai.ctx = new AC(); ai.rate = ai.ctx.sampleRate;
+  if (ai.ctx.state==="suspended"){ try{ await ai.ctx.resume(); }catch(e){} }
+  ai.src = ai.ctx.createMediaStreamSource(ai.stream);
+  ai.proc = ai.ctx.createScriptProcessor(4096,1,1);
+  ai.src.connect(ai.proc); ai.proc.connect(ai.ctx.destination);
+  ai.proc.onaudioprocess = aiOnAudio;
+  ai.on=true; listening=true; aiReset();
+  $("micBtn").classList.add("on"); $("micBtn").textContent="⏹"; $("meter").hidden=false;
+  setStatus("🔴 أستمع الآن…","🤖 تكلّم بجملة قصيرة ثم توقّف — سأفهمها تلقائياً");
+  keepAwake(true);
+}
+function aiOnAudio(e){
+  if (!ai.on || ai.busy) return;
+  const d=e.inputBuffer.getChannelData(0); let sum=0; for (let i=0;i<d.length;i++) sum+=d[i]*d[i];
+  const rms=Math.sqrt(sum/d.length), now=performance.now();
+  $("meterBar").style.width=Math.min(100,Math.round(rms*700))+"%";
+  ai.chunks.push(new Float32Array(d));
+  if (now-ai.t0<500){ ai.calib.push(rms); return; }                       // نصف ثانية لقياس الضجيج
+  if (!ai.noise) ai.noise = ai.calib.length ? ai.calib.reduce((a,b)=>a+b,0)/ai.calib.length : 0.005;
+  const thr = Math.max(0.012, ai.noise*2.5);
+  if (rms>thr){
+    if (!ai.speech){ ai.speech=true; ai.sp0=now; setStatus("🟢 أسمع كلاماً…","توقّف قليلاً عند انتهاء الجملة"); }
+    ai.lastVoice=now;
+  }
+  if (!ai.speech){
+    const keep=Math.ceil(0.6*ai.rate/4096); if (ai.chunks.length>keep) ai.chunks.splice(0, ai.chunks.length-keep);
+    ai.noise = ai.noise*0.95 + rms*0.05;
+    return;
+  }
+  if (now-ai.lastVoice>1300 || now-ai.sp0>15000) aiFinish();
+}
+async function aiFinish(){
+  ai.busy=true; const chunks=ai.chunks; ai.chunks=[];
+  $("meterBar").style.width="0%"; setStatus("🤖 أفهم الكلام…","لحظة من فضلك");
+  let msg=null;
+  try{
+    const res = await askGeminiAudio(toB64(encodeWav(chunks, ai.rate, 16000)));
+    if (res.text){ finalText=res.text; $("liveText").textContent=res.text; showHeard(res.text, res.sc.length?{sc:res.sc,src:"gemini"}:null); }
+    else msg=["🤷 لم أفهم الكلام","أعد الجملة بوضوح وقرب الهاتف"];
+  }catch(err){
+    const m=String(err&&err.message||err);
+    msg = /gemini (400|401|403)/.test(m) ? ["⚠️ مفتاح Gemini غير صالح","تحقق من المفتاح في ⚙️ الإعدادات"]
+        : /gemini 429/.test(m) ? ["⏳ تجاوزت الحد المجاني مؤقتاً","انتظر دقيقة ثم أعد المحاولة"]
+        : ["⚠️ تعذّر الاتصال بالذكاء الاصطناعي","تحقق من الإنترنت ثم أعد المحاولة"];
+  }
+  ai.busy=false;
+  if (ai.on){ aiReset(); if (msg) setStatus(msg[0], msg[1]+" — ما زلت أستمع"); else setStatus("🔴 أستمع الآن…","🤖 تكلّم بجملة قصيرة ثم توقّف"); }
+}
+function aiStop(){
+  ai.on=false;
+  try{ if (ai.proc){ ai.proc.onaudioprocess=null; ai.proc.disconnect(); } if (ai.src) ai.src.disconnect(); }catch(e){}
+  try{ if (ai.stream) ai.stream.getTracks().forEach(t=>t.stop()); }catch(e){}
+  try{ if (ai.ctx) ai.ctx.close(); }catch(e){}
+  ai.stream=ai.ctx=ai.src=ai.proc=null; $("meter").hidden=true;
 }
 $("micBtn").onclick = () => listening ? stopRec() : startRec();
 function typedHeard(){ const v=$("typeIn").value.trim(); if(!v) return; finalText=v; $("liveText").textContent=v; showHeard(v); $("typeIn").value=""; }
@@ -1110,12 +1231,22 @@ $("sName").onchange=()=>clearCache();
 for (const [id,key] of [["sReads","reads"],["sCaps","caps"],["sFlash","flash"],["sWake","wake"],["sContrast","contrast"],["sSpeakTap","speakTap"]])
   $(id).onchange=e=>{ S[key]=e.target.checked; if(key==="reads") S.caps=S.reads||S.caps; save(); syncSettings(); applyProfile(); };
 function syncSr(){
-  if (!window.AndroidBridge) return;
+  const hasA=!!window.AndroidBridge;
   $("srBox").hidden=false;
-  syncSeg("sSr", window.__srMode());
-  try{ const svc=AndroidBridge.serviceInfo(); $("srInfo").textContent = svc==="com.google.android.googlequicksearchbox" ? "خدمة التعرّف: Google ✓" : "خدمة التعرّف: الافتراضية في الهاتف (يُنصح بتثبيت تطبيق Google)"; }catch(e){}
+  $("sSr").querySelector('[data-v="dialog"]').hidden=!hasA;
+  syncSeg("sSr", srModeGet());
+  let info="";
+  if (hasA){ try{ info = AndroidBridge.serviceInfo()==="com.google.android.googlequicksearchbox" ? "خدمة Google للكلام: موجودة ✓" : "خدمة الكلام: الافتراضية في الهاتف"; }catch(e){} }
+  if (srModeGet()==="ai") info = gemKey ? "🤖 الاستماع بالذكاء الاصطناعي مفعّل ✓" : "⚠️ أضف مفتاح Gemini المجاني في قسم «الذكاء الاصطناعي» أسفله";
+  $("srInfo").textContent=info;
 }
-$("sSr").querySelectorAll("button").forEach(b=>b.onclick=()=>{ try{ localStorage.setItem("sila-srmode",b.dataset.v); }catch(e){} syncSr(); if (listening){ stopRec(); } toast(b.dataset.v==="dialog"?"🎙️ نافذة Google":"🔁 استماع مستمر"); });
+$("sSr").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  try{ localStorage.setItem("sila-srmode",b.dataset.v); }catch(e){}
+  if (listening) stopRec();
+  syncSr(); $("micNotice").classList.remove("show");
+  if (b.dataset.v==="ai" && !gemKey){ toast("🤖 أضف مفتاح Gemini أولاً"); $("aiBox").scrollIntoView({behavior:"smooth"}); }
+  else toast(b.dataset.v==="dialog"?"🎙️ نافذة Google":b.dataset.v==="ai"?"🤖 الاستماع بالذكاء الاصطناعي":"🔁 استماع مستمر");
+});
 $("sLang").onchange=$("lang").onchange=e=>{ S.lang=e.target.value; save(); syncSettings(); applyProfile(); if (listening){ stopRec(); startRec(); } };
 $("sEmName").oninput=e=>{ S.emName=e.target.value.trim(); save(); };
 $("sEmPhone").oninput=e=>{ S.emPhone=e.target.value.trim(); save(); };
@@ -1237,7 +1368,7 @@ $("resetAll").onclick=e=>{
 
 /* ============ 11) البدء ============ */
 resetStage(); applyProfile(); renderSentence();
-if (!SR && !canHear()) noticeMic("⚠️ هذا المتصفح لا يدعم التعرف على الكلام. استخدم <b>Google Chrome</b>، أو اكتب الجملة يدوياً.");
+if (!SR && !canHear() && srModeGet()!=="ai") noticeMic("⚠️ هذا المتصفح لا يدعم التعرف على الكلام. استخدم <b>Google Chrome</b>، أو اكتب الجملة يدوياً.");
 if (firstRun){ syncSettings(); $("welcome").hidden=false; $("settings").classList.add("show"); }
 if ("serviceWorker" in navigator && location.protocol === "https:" && !window.AndroidBridge) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
