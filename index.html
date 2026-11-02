@@ -215,14 +215,28 @@ footer{color:var(--muted);font-weight:300;font-size:.8em;text-align:center;paddi
       </div>
       <div class="strip" id="strip" hidden></div>
     </div>
-    <details class="panel settings">
+    <details class="panel settings" id="aiBox">
       <summary>🤖 الذكاء الاصطناعي (فهم أفضل للدارجة)</summary>
-      <p class="small">بدون ذكاء اصطناعي يستعمل التطبيق قاموساً مدمجاً (يعمل دون إنترنت). مع الذكاء الاصطناعي يفهم معنى الجملة كاملة — حتى بالدارجة — ويختار 1 إلى 5 صور بسيطة مع حركة مناسبة لكل صورة. يحتاج مفتاح Claude API من <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a> (تكلفة زهيدة جداً لكل جملة). يُحفظ المفتاح في هذا الجهاز فقط.</p>
+      <p class="small">يُستدعى الذكاء الاصطناعي <b>فقط</b> عندما لا يفهم القاموس كل كلمات الجملة، وكل جملة تُترجم مرة واحدة ثم تُحفظ في الهاتف — فالجمل المتكررة لا تكلّف شيئاً. المفاتيح تُحفظ في هذا الجهاز فقط.</p>
       <div class="type-row">
+        <select id="aiProv" class="chip" style="flex:1;padding:10px">
+          <option value="gemini">Gemini — مجاني (الأساسي)</option>
+          <option value="claude">Claude Haiku — أدق، شبه مجاني</option>
+          <option value="off">إيقاف — القاموس فقط</option>
+        </select>
+      </div>
+      <p class="small" style="margin-bottom:4px">1) مفتاح Gemini المجاني: من <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> (حساب Google فقط، دون بطاقة)</p>
+      <div class="type-row" style="margin-top:0">
+        <input id="gemKey" type="password" placeholder="AIza..." autocomplete="off">
+        <button class="btn" id="saveGem">حفظ</button>
+      </div>
+      <p class="small" style="margin-bottom:4px">2) مفتاح Claude (احتياطي، اختياري): من <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a></p>
+      <div class="type-row" style="margin-top:0">
         <input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off">
         <button class="btn" id="saveKey">حفظ</button>
       </div>
       <p class="small" id="keyState"></p>
+      <div class="actions"><button class="btn ghost" id="clearCache">🧠 مسح الجمل المحفوظة</button></div>
     </details>
   </section>
 
@@ -479,8 +493,12 @@ function playStory(el, scenes, loop){
 }
 
 // الذكاء الاصطناعي: يفهم الجملة ويختار صوراً بسيطة
-const AI_MODEL="claude-haiku-5-5";
-let apiKey=""; try{ apiKey=localStorage.getItem("sila-key")||""; }catch(e){}
+// ===== الذكاء الاصطناعي: مزوّدان + ذاكرة + استدعاء عند الحاجة فقط =====
+const CLAUDE_MODEL="claude-haiku-5-5";
+const GEMINI_MODELS=["gemini-flash-lite-latest","gemini-2.5-flash-lite"];
+const ls={get:k=>{try{return localStorage.getItem(k)||"";}catch(e){return "";}},
+          set:(k,v)=>{try{v?localStorage.setItem(k,v):localStorage.removeItem(k);}catch(e){}}};
+let apiKey=ls.get("sila-key"), gemKey=ls.get("sila-gem"), aiProv=ls.get("sila-prov")||"gemini";
 const SYS = `أنت تساعد ابناً يتحدث مع أمه المسنّة في الجزائر. الأم صمّاء (فقدت السمع بعد أن كانت تسمع) ولا تعرف القراءة ولا الكتابة، لذلك تفهم فقط الصور.
 حوّل الجملة المسموعة (قد تكون بالدارجة الجزائرية أو الفصحى أو الفرنسية وقد تحتوي أخطاء التعرف على الصوت) إلى قصة مصوّرة قصيرة جداً.
 القواعد:
@@ -491,22 +509,74 @@ const SYS = `أنت تساعد ابناً يتحدث مع أمه المسنّة 
 - c: كلمة أو كلمتان بالدارجة الجزائرية تصف المشهد (للابن فقط).
 - a: حركة واحدة من: bounce, slide, slideback, pulse, shake, spin, float, grow, wave, nod — اختر ما يعبّر عن المعنى (slide للذهاب، slideback للمجيء، wave للتحية، pulse للحب والمشاعر، shake للألم أو الخطر أو الرفض، float للنوم والماء، nod للموافقة والسؤال، spin للانتظار والوقت).
 أجب بـ JSON فقط بدون أي نص آخر، بهذا الشكل: {"scenes":[{"e":"🏥","c":"سبيطار","a":"bounce"}]}`;
-async function aiScenes(text){
-  const r = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
-    headers:{"x-api-key":apiKey,"anthropic-version":"2023-06-01","content-type":"application/json","anthropic-dangerous-direct-browser-access":"true"},
-    body:JSON.stringify({model:AI_MODEL,max_tokens:500,system:SYS,messages:[{role:"user",content:text}]})});
-  if (!r.ok) throw new Error("HTTP "+r.status);
-  const j = await r.json();
-  const t = (j.content||[]).map(b=>b.text||"").join("");
-  const m = t.match(/\{[\s\S]*\}/); if (!m) throw new Error("bad json");
+
+function parseScenes(t){
+  const m = String(t||"").match(/\{[\s\S]*\}/); if (!m) throw new Error("bad json");
   const sc = (JSON.parse(m[0]).scenes||[]).filter(s=>s&&s.e).slice(0,5);
+  if (!sc.length) throw new Error("empty");
   return sc.map(s=>({e:String(s.e),c:String(s.c||""),a:/^(bounce|slide|slideback|pulse|shake|spin|float|grow|wave|nod)$/.test(s.a)?s.a:"bounce"}));
 }
-function updateKeyUI(){
-  $("modeBadge").textContent = apiKey ? "ذكاء اصطناعي" : "قاموس";
-  $("keyState").textContent = apiKey ? "✅ الذكاء الاصطناعي مفعّل." : "الذكاء الاصطناعي غير مفعّل — يعمل القاموس فقط.";
+async function askClaude(text){
+  const r = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+    headers:{"x-api-key":apiKey,"anthropic-version":"2023-06-01","content-type":"application/json","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:CLAUDE_MODEL,max_tokens:400,system:SYS,messages:[{role:"user",content:text}]})});
+  if (!r.ok) throw new Error("claude "+r.status);
+  const j = await r.json();
+  return parseScenes((j.content||[]).map(b=>b.text||"").join(""));
 }
-$("saveKey").onclick=()=>{ apiKey=$("apiKey").value.trim(); try{ apiKey?localStorage.setItem("sila-key",apiKey):localStorage.removeItem("sila-key"); }catch(e){} $("apiKey").value=""; updateKeyUI(); };
+async function askGemini(text){
+  let last;
+  for (const model of GEMINI_MODELS){
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:"POST",
+      headers:{"content-type":"application/json","x-goog-api-key":gemKey},
+      body:JSON.stringify({systemInstruction:{parts:[{text:SYS}]},contents:[{role:"user",parts:[{text}]}],
+        generationConfig:{responseMimeType:"application/json",maxOutputTokens:400,temperature:0.3}})});
+    if (r.status===404){ last=new Error("gemini 404"); continue; }   // اسم النموذج غير متاح → جرّب التالي
+    if (!r.ok) throw new Error("gemini "+r.status);
+    const j = await r.json();
+    return parseScenes(((j.candidates||[])[0]?.content?.parts||[]).map(p=>p.text||"").join(""));
+  }
+  throw last;
+}
+// ذاكرة الجمل: كل جملة تُترجم مرة واحدة فقط
+let CACHE={}; try{ CACHE=JSON.parse(ls.get("sila-cache")||"{}"); }catch(e){}
+const cacheKey = t => norm(t).replace(/\s+/g," ");
+function cacheGet(t){ return CACHE[cacheKey(t)]; }
+function cachePut(t,sc){
+  CACHE[cacheKey(t)]=sc;
+  const ks=Object.keys(CACHE); if (ks.length>800) ks.slice(0,ks.length-800).forEach(k=>delete CACHE[k]);
+  ls.set("sila-cache",JSON.stringify(CACHE)); updateKeyUI();
+}
+// هل فهم القاموس كل الكلمات المهمة؟ إذا نعم → لا داعي للذكاء الاصطناعي
+const dictCovers = pics => pics.length>0 && pics.every(p=>p.e);
+function providers(){
+  const has={gemini:!!gemKey, claude:!!apiKey};
+  const order = aiProv==="claude" ? ["claude","gemini"] : aiProv==="gemini" ? ["gemini","claude"] : [];
+  return order.filter(p=>has[p]);
+}
+async function aiScenes(text){
+  let err;
+  for (const p of providers()){
+    try{ const sc = p==="gemini" ? await askGemini(text) : await askClaude(text); cachePut(text,sc); return {sc,src:p}; }
+    catch(e){ err=e; }
+  }
+  throw err||new Error("no provider");
+}
+const PROV_NAME={gemini:"Gemini",claude:"Claude"};
+function updateKeyUI(){
+  $("aiProv").value=aiProv;
+  const ps=providers();
+  $("modeBadge").textContent = ps.length ? "ذكاء اصطناعي" : "قاموس";
+  const n=Object.keys(CACHE).length;
+  $("keyState").textContent = (ps.length ? "✅ مفعّل: "+ps.map(p=>PROV_NAME[p]).join(" ثم ") : (aiProv==="off"?"⏸️ الذكاء الاصطناعي موقوف — القاموس فقط.":"⚪ أدخل مفتاحاً واحداً على الأقل لتفعيل الذكاء الاصطناعي."))
+    + ` · جمل محفوظة: ${n}`;
+}
+$("saveKey").onclick=()=>{ apiKey=$("apiKey").value.trim(); ls.set("sila-key",apiKey); $("apiKey").value=""; updateKeyUI(); };
+$("saveGem").onclick=()=>{ gemKey=$("gemKey").value.trim(); ls.set("sila-gem",gemKey); $("gemKey").value=""; updateKeyUI(); };
+$("aiProv").onchange=e=>{ aiProv=e.target.value; ls.set("sila-prov",aiProv); updateKeyUI(); };
+$("clearCache").onclick=()=>{ CACHE={}; ls.set("sila-cache",""); updateKeyUI(); };
+$("apiKey").placeholder = apiKey ? "✓ محفوظ — اكتب مفتاحاً جديداً لتغييره" : "sk-ant-...";
+$("gemKey").placeholder = gemKey ? "✓ محفوظ — اكتب مفتاحاً جديداً لتغييره" : "AIza...";
 
 let curScenes=[];
 async function showHeard(text, final){
@@ -514,19 +584,23 @@ async function showHeard(text, final){
   const pics = toPictos(text);
   heardPics = pics; lastHeardText=text;
   const my = ++reqId;
-  curScenes = dictScenes(pics);
-  playStory($("stage"), curScenes, false);   // عرض فوري بالقاموس
+  const setScenes = (sc,badge) => {
+    curScenes=sc; playStory($("stage"), sc, false);
+    if ($("big").classList.contains("show")&&!$("bigStage").hidden) playStory($("bigStage"), sc, true);
+    $("modeBadge").textContent=badge;
+  };
   flash();
-  if (apiKey){
-    $("modeBadge").textContent="… يفكّر";
-    try{
-      const sc = await aiScenes(text);
-      if (my!==reqId) return;
-      if (sc.length){ curScenes=sc; playStory($("stage"), sc, false); if ($("big").classList.contains("show")&&!$("bigStage").hidden) playStory($("bigStage"), sc, true); }
-      $("modeBadge").textContent="ذكاء اصطناعي";
-    }catch(e){
-      $("modeBadge").textContent="قاموس (تعذّر الاتصال)";
-    }
+  const cached = providers().length ? cacheGet(text) : null;
+  if (cached){ setScenes(cached,"🧠 محفوظة"); }                       // 1) من الذاكرة: مجاناً وفوراً
+  else {
+    setScenes(dictScenes(pics),"قاموس");                               // 2) القاموس: فوراً
+    if (providers().length && !dictCovers(pics)){                       // 3) الذكاء الاصطناعي عند الحاجة فقط
+      $("modeBadge").textContent="… يفكّر";
+      try{
+        const {sc,src} = await aiScenes(text);
+        if (my===reqId) setScenes(sc,"🤖 "+PROV_NAME[src]);
+      }catch(e){ if (my===reqId) $("modeBadge").textContent="قاموس (تعذّر الاتصال)"; }
+    } else if (providers().length) $("modeBadge").textContent="قاموس ✓";
   }
   addLog("heard", text, curScenes.map(s=>({e:s.e})));
 }
