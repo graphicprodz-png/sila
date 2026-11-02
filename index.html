@@ -310,7 +310,7 @@ footer a{color:inherit;font-weight:500}
     </div>
   </section>
 
-  <footer>صِلة V1.3 — تطوير <a href="https://www.titterisoft.com" target="_blank" rel="noopener">TitteriSoft</a> · www.titterisoft.com</footer>
+  <footer>صِلة V1.4 — تطوير <a href="https://www.titterisoft.com" target="_blank" rel="noopener">TitteriSoft</a> · www.titterisoft.com</footer>
 </div>
 
 <!-- full screen -->
@@ -327,7 +327,7 @@ footer a{color:inherit;font-weight:500}
   <div class="box">
     <div class="mark">🤟</div>
     <h3>صِلة</h3>
-    <div class="small">الإصدار V1.3</div>
+    <div class="small">الإصدار V1.4</div>
     <p>تطبيق يحوّل الكلام إلى صور متحركة، ويحوّل الصور إلى كلام، ليتواصل الأشخاص الصم والبكم — خاصة كبار السن الذين لا يقرؤون — مع من حولهم بسهولة وكرامة.</p>
     <div class="dev">
       <span class="small">تطوير</span>
@@ -463,7 +463,10 @@ if (window.AndroidBridge) {
   // طريقة الاستماع: auto = مستمر (ويتحوّل تلقائياً عند تكرر الأخطاء) ، dialog = نافذة Google لكل جملة
   const srMode = () => { try{ return localStorage.getItem("sila-srmode")||"auto"; }catch(e){ return "auto"; } };
   window.__srMode = srMode;
-  let fails = 0;
+  let fails = 0, quiet = 0, dialogCancels = 0;
+  const hasGem = () => { try{ return !!localStorage.getItem("sila-gem"); }catch(e){ return false; } };
+  // الانتقال التلقائي إلى الاستماع بالذكاء الاصطناعي عندما لا تعمل خدمة Google ويوجد مفتاح Gemini
+  const toAI = (r, why) => { try{ localStorage.setItem("sila-srmode","ai"); }catch(e){} fails=quiet=dialogCancels=0; r.__toAI=true; r.onerror && r.onerror({error:"switched-ai", detail:why}); };
   window.SpeechRecognition = class {
     constructor(){ this.lang="ar-DZ"; this.continuous=true; this.interimResults=true; window.__sr=this; }
     start(){
@@ -475,12 +478,19 @@ if (window.AndroidBridge) {
   };
   window.__srEvent = (type, text, isFinal) => {
     const r = window.__sr; if (!r) return;
-    if (type==="result"){ fails=0; const res=[{transcript:text}]; res.isFinal=isFinal; r.onresult && r.onresult({resultIndex:0, results:[res]}); }
+    if (type==="result"){ fails=0; quiet=0; dialogCancels=0; const res=[{transcript:text}]; res.isFinal=isFinal; r.onresult && r.onresult({resultIndex:0, results:[res]}); }
     else if (type==="ready"||type==="speech"){ r.onstate && r.onstate(type); }
     else if (type==="error"){
       const [code,num] = String(text||"").split("|");
-      if (code==="cancelled"){ r.__stopNow=true; return; }
-      if (code!=="no-speech") fails++;
+      if (code==="cancelled"){
+        dialogCancels++;
+        if (dialogCancels>=2 && hasGem()){ toAI(r,"dialog"); return; }        // نافذة Google تُغلق دون نص ← غالباً «غير متاح»
+        r.__stopNow=true; return;
+      }
+      if (code==="service-not-allowed" && hasGem()){ toAI(r,code); return; }   // لا توجد خدمة كلام في الهاتف
+      if (code==="no-speech"){ quiet++; if (quiet>=4 && hasGem()){ toAI(r,"quiet"); return; } }   // تستمع ولا تلتقط أي كلام
+      else fails++;
+      if (fails>=3 && hasGem() && ["busy","server","language","audio","network"].includes(code)){ toAI(r,code); return; }
       if (srMode()==="auto" && fails>=3 && ["busy","server","language","audio"].includes(code)){
         try{ localStorage.setItem("sila-srmode","dialog"); }catch(e){}
         fails=0; r.__switched=true;
@@ -489,6 +499,7 @@ if (window.AndroidBridge) {
       r.onerror && r.onerror({error:code, detail:num});
     }
     else if (type==="end"){
+      if (r.__toAI){ r.__toAI=false; window.stopRec && window.stopRec(); setTimeout(()=>window.startRec && window.startRec(), 300); return; }
       if (r.__stopNow){ r.__stopNow=false; window.stopRec && window.stopRec(); return; }
       if (srMode()==="dialog" && !r.__switched){ window.stopRec && window.stopRec(); return; }   // جملة واحدة لكل ضغطة
       r.__switched=false;
@@ -912,7 +923,7 @@ async function keepAwake(on){
   }catch(e){ wakeLock=null; }
 }
 function startRec(){
-  if (srModeGet()==="ai"){ aiStart(); return; }
+  if (srModeGet()==="ai" || (!SR && gemKey)){ aiStart(); return; }
   if (!SR){ noticeMic("⚠️ هذا المتصفح لا يدعم التعرف على الكلام. استخدم <b>Google Chrome</b>، أو اكتب الجملة يدوياً."); return; }
   rec = new SR(); rec.lang = S.lang; rec.continuous = true; rec.interimResults = true;
   rec.onresult = ev => {
@@ -927,6 +938,11 @@ function startRec(){
   };
   rec.onerror = e => {
     const c=e.error;
+    if (c==="switched-ai"){ toast("🤖 خدمة Google لا تعمل هنا — انتقلت تلقائياً إلى الاستماع بالذكاء الاصطناعي"); return; }
+    if (!window.AndroidBridge && gemKey && ["network","service-not-allowed","language-not-supported"].includes(c)){
+      try{ localStorage.setItem("sila-srmode","ai"); }catch(err){}
+      toast("🤖 انتقلت تلقائياً إلى الاستماع بالذكاء الاصطناعي"); stopRec(); setTimeout(startRec,300); return;
+    }
     if (c==="not-allowed"){ stopRec(); noticeMic("🎤 لم يُسمح باستخدام الميكروفون. افتح إعدادات الهاتف ← التطبيقات ← صِلة ← الأذونات ← الميكروفون ← سماح. يمكنك دائماً كتابة الجملة يدوياً."); }
     else if (c==="service-not-allowed"){ stopRec(); noticeMic("🎤 لا توجد خدمة للتعرّف على الكلام في هذا الهاتف. ثبّت أو حدّث تطبيق <b>Google</b> من متجر Play، أو اكتب الجملة يدوياً."); }
     else if (c==="network"){ setStatus("⚠️ لا يوجد اتصال بالإنترنت","التعرّف على الكلام يحتاج الإنترنت — يمكنك الكتابة يدوياً"); }
