@@ -35,6 +35,16 @@
 ```
 النوع (الخانة الثالثة) اختياري: `feel` مشاعر، `need` حاجة، `q` سؤال، `urgent` عاجل.
 
-## تحويله إلى APK (أندرويد)
-ضع رابط GitHub Pages في [PWABuilder](https://www.pwabuilder.com) ← Android ← Generate.
-يعطيك ملف APK/AAB يعمل عبر Chrome (فيبقى التعرّف على الكلام شغّالاً).
+## تطبيق أندرويد (APK)
+يُبنى الـ APK **تلقائياً** على GitHub Actions مع كل تحديث (`.github/workflows/android.yml`)،
+ويُنشر في صفحة **Releases**. رابط ثابت لآخر نسخة:
+
+`https://github.com/graphicprodz-png/sila/releases/latest/download/sila.apk`
+
+- مجلد `android/` غلاف أندرويد خفيف (WebView) يعرض نفس `index.html`.
+- التعرّف على الكلام يتم عبر خدمة الهاتف نفسها (SpeechRecognizer) لأن WebView لا يدعم Web Speech API.
+- التوقيع ثابت (`android/app/debug.keystore`)، فكل نسخة جديدة تُثبَّت فوق القديمة.
+- يحتاج الهاتف تطبيق **Google** (خدمة التعرّف على الكلام) مع حزمة العربية.
+
+---
+تطوير **TitteriSoft** — [www.titterisoft.com](https://www.titterisoft.com)

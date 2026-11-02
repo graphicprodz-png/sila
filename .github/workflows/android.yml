@@ -1,0 +1,52 @@
+name: بناء APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.14.3"
+
+      - name: نسخ تطبيق الويب داخل أندرويد
+        run: |
+          mkdir -p android/app/src/main/assets
+          cp -r index.html fonts icons android/app/src/main/assets/
+
+      - name: بناء APK
+        working-directory: android
+        run: gradle assembleDebug --no-daemon --stacktrace
+
+      - name: تسمية الملف
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk sila.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sila-apk
+          path: sila.apk
+
+      - name: نشر النسخة في Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: صِلة — نسخة ${{ github.run_number }}
+          body: |
+            حمّل **sila.apk** وثبّته على الهاتف (اسمح بالتثبيت من مصادر غير معروفة).
+            رابط ثابت لآخر نسخة: https://github.com/${{ github.repository }}/releases/latest/download/sila.apk
+          files: sila.apk
+          make_latest: true

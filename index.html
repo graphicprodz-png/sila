@@ -158,6 +158,20 @@ details.settings .type-row input{direction:ltr}
 .big .scene .e{font-size:min(30vw,190px)}
 .big .scene .c{color:inherit;font-size:1.3em}
 
+/* حول التطبيق */
+.about{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+.about.show{display:flex}
+.about .box{background:var(--panel);color:var(--ink);border-radius:22px;max-width:420px;width:100%;padding:22px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.about .mark{width:72px;height:72px;border-radius:20px;background:var(--primary);color:var(--primary-ink);display:grid;place-items:center;font-size:38px;margin:0 auto 8px}
+.about h3{margin:0;font-size:1.5em}
+.about .ver{color:var(--muted);font-weight:300;font-size:.85em}
+.about p{font-weight:300;margin:12px 0}
+.about .dev{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
+.about .dev b{font-size:1.25em;display:block}
+.about .dev a{color:var(--primary);font-weight:700;text-decoration:none;direction:ltr;display:inline-block;margin-top:4px}
+body.contrast .about .dev a{color:var(--primary)}
+.about .btn{margin-top:16px;width:100%}
+
 footer{color:var(--muted);font-weight:300;font-size:.8em;text-align:center;padding:8px}
 @media (max-width:600px){.mic{width:76px;height:76px;font-size:32px}.live-text{font-size:1.35em}}
 </style>
@@ -178,6 +192,7 @@ footer{color:var(--muted);font-weight:300;font-size:.8em;text-align:center;paddi
       <button class="chip" id="fsDown" aria-label="تصغير الخط">أ−</button>
       <button class="chip" id="fsUp" aria-label="تكبير الخط">أ+</button>
       <button class="chip" id="contrast" aria-pressed="false">◐ تباين عالٍ</button>
+      <button class="chip" id="aboutBtn">ℹ️ حول</button>
     </div>
   </header>
 
@@ -271,7 +286,7 @@ footer{color:var(--muted);font-weight:300;font-size:.8em;text-align:center;paddi
     </div>
   </section>
 
-  <footer>صِلة — نموذج أولي. التعرف على الكلام يعمل في Chrome و Edge وSafari الحديثة ويتطلب إذن الميكروفون.</footer>
+  <footer>صِلة 1.0 — تطوير <a href="https://www.titterisoft.com" target="_blank" rel="noopener" style="color:inherit;font-weight:500">TitteriSoft</a> · www.titterisoft.com</footer>
 </div>
 
 <div class="big" id="big" role="dialog" aria-modal="true">
@@ -281,7 +296,35 @@ footer{color:var(--muted);font-weight:300;font-size:.8em;text-align:center;paddi
   <div class="bt" id="bigT"></div>
 </div>
 
+<div class="about" id="about" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+  <div class="box">
+    <div class="mark">🤟</div>
+    <h3 id="aboutTitle">صِلة</h3>
+    <div class="ver">الإصدار 1.0</div>
+    <p>تطبيق يحوّل الكلام إلى صور متحركة بسيطة، ليتواصل الأشخاص الصم — خاصة كبار السن الذين لا يقرؤون — مع من حولهم بسهولة.</p>
+    <div class="dev">
+      <span class="small">تطوير</span>
+      <b>TitteriSoft</b>
+      <a href="https://www.titterisoft.com" target="_blank" rel="noopener">www.titterisoft.com</a>
+    </div>
+    <button class="btn" id="aboutClose">حسناً</button>
+  </div>
+</div>
 <script>
+/* ============ 0) جسر أندرويد: التعرّف على الكلام عبر الهاتف عند العمل داخل تطبيق APK ============ */
+if (window.AndroidBridge) {
+  window.SpeechRecognition = class {
+    constructor(){ this.lang="ar-DZ"; this.continuous=true; this.interimResults=true; window.__sr=this; }
+    start(){ window.__sr=this; const l=this.lang; setTimeout(()=>AndroidBridge.startListening(l), 250); }
+    stop(){ AndroidBridge.stopListening(); }
+  };
+  window.__srEvent = (type, text, isFinal) => {
+    const r = window.__sr; if (!r) return;
+    if (type==="result"){ const res=[{transcript:text}]; res.isFinal=isFinal; r.onresult && r.onresult({resultIndex:0, results:[res]}); }
+    else if (type==="error"){ r.onerror && r.onerror({error:text}); }
+    else if (type==="end"){ r.onend && r.onend(); }
+  };
+}
 /* ============ 1) القاموس المرئي: كلمة → صورة ============ */
 // kind: feel / need / q / urgent (لتلوين البطاقات)
 const RAW = [
@@ -682,6 +725,7 @@ function renderSentence(){
 }
 const sentText = () => sentence.map(p=>p.w).join(" ").replace(/\s+([؟?])/g,"$1");
 function speak(text){
+  if (window.AndroidBridge){ try{ AndroidBridge.speak(text,$("lang").value); return true; }catch(e){} }
   if (!("speechSynthesis" in window)) return false;
   try{
     speechSynthesis.cancel();
@@ -724,11 +768,14 @@ const applyFs=()=>{ document.documentElement.style.setProperty("--fs",fs); try{l
 $("fsUp").onclick=()=>{ fs=Math.min(1.6,fs+.1); applyFs(); };
 $("fsDown").onclick=()=>{ fs=Math.max(.8,fs-.1); applyFs(); };
 $("contrast").onclick=e=>{ const on=document.body.classList.toggle("contrast"); e.target.setAttribute("aria-pressed",on); };
+$("aboutBtn").onclick=()=>$("about").classList.add("show");
+$("aboutClose").onclick=()=>$("about").classList.remove("show");
+$("about").onclick=e=>{ if(e.target.id==="about") $("about").classList.remove("show"); };
 $("clearLog").onclick=()=>{ LOG=[]; saveLog(); renderLog(); };
 if ("speechSynthesis" in window) speechSynthesis.onvoiceschanged=()=>{};
 if (!SR) noticeMic("⚠️ متصفحك لا يدعم التعرف على الكلام. افتح التطبيق في <b>Google Chrome</b> أو <b>Edge</b>، أو اكتب الجملة يدوياً.");
 applyFs(); renderCats(); renderGrid(); renderLog(); updateKeyUI();
-if ("serviceWorker" in navigator && location.protocol === "https:") {
+if ("serviceWorker" in navigator && location.protocol === "https:" && !window.AndroidBridge) {
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
 </script>
