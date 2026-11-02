@@ -307,7 +307,7 @@ footer a{color:inherit;font-weight:500}
     </div>
   </section>
 
-  <footer>صِلة V1.1 — تطوير <a href="https://www.titterisoft.com" target="_blank" rel="noopener">TitteriSoft</a> · www.titterisoft.com</footer>
+  <footer>صِلة V1.2 — تطوير <a href="https://www.titterisoft.com" target="_blank" rel="noopener">TitteriSoft</a> · www.titterisoft.com</footer>
 </div>
 
 <!-- full screen -->
@@ -324,7 +324,7 @@ footer a{color:inherit;font-weight:500}
   <div class="box">
     <div class="mark">🤟</div>
     <h3>صِلة</h3>
-    <div class="small">الإصدار V1.1</div>
+    <div class="small">الإصدار V1.2</div>
     <p>تطبيق يحوّل الكلام إلى صور متحركة، ويحوّل الصور إلى كلام، ليتواصل الأشخاص الصم والبكم — خاصة كبار السن الذين لا يقرؤون — مع من حولهم بسهولة وكرامة.</p>
     <div class="dev">
       <span class="small">تطوير</span>
@@ -395,6 +395,12 @@ footer a{color:inherit;font-weight:500}
       <section class="set">
         <h3>🔊 اللغة والنطق</h3>
         <label class="field">لغة الكلام<select id="sLang"></select></label>
+        <div id="srBox" hidden>
+          <div class="field">طريقة الاستماع</div>
+          <div class="seg" id="sSr"><button data-v="auto">🔁 مستمر</button><button data-v="dialog">🎙️ نافذة Google</button></div>
+          <span class="small">«مستمر» يستمع دون توقف. «نافذة Google» تفتح نافذة لكل جملة — أضمن على بعض الهواتف، ويتحوّل التطبيق إليها تلقائياً إن تكررت الأخطاء.</span>
+          <span class="small" id="srInfo" style="display:block"></span>
+        </div>
         <div id="ttsBox">
           <div class="field">سرعة النطق</div>
           <div class="seg" id="sRate"><button data-v="0.75">🐢 بطيئة</button><button data-v="0.95">عادية</button><button data-v="1.15">⚡ سريعة</button></div>
@@ -451,16 +457,40 @@ footer a{color:inherit;font-weight:500}
 <script>
 /* ============ 0) جسر أندرويد ============ */
 if (window.AndroidBridge) {
+  // طريقة الاستماع: auto = مستمر (ويتحوّل تلقائياً عند تكرر الأخطاء) ، dialog = نافذة Google لكل جملة
+  const srMode = () => { try{ return localStorage.getItem("sila-srmode")||"auto"; }catch(e){ return "auto"; } };
+  window.__srMode = srMode;
+  let fails = 0;
   window.SpeechRecognition = class {
     constructor(){ this.lang="ar-DZ"; this.continuous=true; this.interimResults=true; window.__sr=this; }
-    start(){ window.__sr=this; const l=this.lang; setTimeout(()=>AndroidBridge.startListening(l), 250); }
+    start(){
+      window.__sr=this; const l=this.lang;
+      if (srMode()==="dialog") return setTimeout(()=>AndroidBridge.startDialog(l), 50);
+      setTimeout(()=>AndroidBridge.startListening(l), Math.min(4000, 250*Math.pow(2,fails)));  // تأخير متزايد عند الأخطاء
+    }
     stop(){ AndroidBridge.stopListening(); }
   };
   window.__srEvent = (type, text, isFinal) => {
     const r = window.__sr; if (!r) return;
-    if (type==="result"){ const res=[{transcript:text}]; res.isFinal=isFinal; r.onresult && r.onresult({resultIndex:0, results:[res]}); }
-    else if (type==="error"){ r.onerror && r.onerror({error:text}); }
-    else if (type==="end"){ r.onend && r.onend(); }
+    if (type==="result"){ fails=0; const res=[{transcript:text}]; res.isFinal=isFinal; r.onresult && r.onresult({resultIndex:0, results:[res]}); }
+    else if (type==="ready"||type==="speech"){ r.onstate && r.onstate(type); }
+    else if (type==="error"){
+      const [code,num] = String(text||"").split("|");
+      if (code==="cancelled"){ r.__stopNow=true; return; }
+      if (code!=="no-speech") fails++;
+      if (srMode()==="auto" && fails>=3 && ["busy","server","language","audio"].includes(code)){
+        try{ localStorage.setItem("sila-srmode","dialog"); }catch(e){}
+        fails=0; r.__switched=true;
+        r.onerror && r.onerror({error:"switched", detail:num}); return;
+      }
+      r.onerror && r.onerror({error:code, detail:num});
+    }
+    else if (type==="end"){
+      if (r.__stopNow){ r.__stopNow=false; window.stopRec && window.stopRec(); return; }
+      if (srMode()==="dialog" && !r.__switched){ window.stopRec && window.stopRec(); return; }   // جملة واحدة لكل ضغطة
+      r.__switched=false;
+      r.onend && r.onend();
+    }
   };
 }
 const $ = id => document.getElementById(id);
@@ -886,14 +916,26 @@ function startRec(){
     if (interim){ const s=document.createElement("span"); s.className="interim"; s.textContent=(finalText?" … ":"")+interim; lt.appendChild(s); }
   };
   rec.onerror = e => {
-    if (e.error==="not-allowed"||e.error==="service-not-allowed"){
-      stopRec(); noticeMic("🎤 لم يُسمح باستخدام الميكروفون. اسمح بالإذن من إعدادات الهاتف أو المتصفح. يمكنك دائماً كتابة الجملة يدوياً.");
-    } else if (e.error==="network"){ setStatus("⚠️ لا يوجد اتصال بالإنترنت","التعرّف على الكلام يحتاج الإنترنت — يمكنك الكتابة يدوياً"); }
+    const c=e.error;
+    if (c==="not-allowed"){ stopRec(); noticeMic("🎤 لم يُسمح باستخدام الميكروفون. افتح إعدادات الهاتف ← التطبيقات ← صِلة ← الأذونات ← الميكروفون ← سماح. يمكنك دائماً كتابة الجملة يدوياً."); }
+    else if (c==="service-not-allowed"){ stopRec(); noticeMic("🎤 لا توجد خدمة للتعرّف على الكلام في هذا الهاتف. ثبّت أو حدّث تطبيق <b>Google</b> من متجر Play، أو اكتب الجملة يدوياً."); }
+    else if (c==="network"){ setStatus("⚠️ لا يوجد اتصال بالإنترنت","التعرّف على الكلام يحتاج الإنترنت — يمكنك الكتابة يدوياً"); }
+    else if (c==="language"){ setStatus("⚠️ هذه اللهجة غير مدعومة على هذا الهاتف","أجرّب العربية العامة تلقائياً… أو اختر «العربية الفصحى» من القائمة"); }
+    else if (c==="audio"){ setStatus("⚠️ الميكروفون مشغول","ربما يستعمله تطبيق آخر (مكالمة، مسجّل صوت…)"); }
+    else if (c==="switched"){ setStatus("🔄 أنتقل إلى نافذة Google للاستماع","طريقة أضمن على هذا الهاتف — يمكنك تغييرها من الإعدادات"); toast("🔄 تم التحويل إلى نافذة Google للاستماع"); syncSr(); }
+    else if (c==="busy"||c==="server"){ setStatus("⏳ أعيد تشغيل الاستماع…","رمز الخطأ: "+(e.detail||c)); }
   };
+  rec.onstate = st => {
+    if (st==="speech") setStatus("🟢 أسمع كلاماً…","تكلّم بوضوح وبجمل قصيرة");
+    else setStatus("🔴 أستمع الآن…","تكلّم بوضوح وبجمل قصيرة. اضغط مرة أخرى للإيقاف");
+  };
+  rec.onspeechstart = () => rec.onstate("speech");
+  rec.onaudiostart = () => rec.onstate("ready");
   rec.onend = () => { if (listening) { try{ rec.start(); }catch(e){} } };
   try{ rec.start(); }catch(e){ noticeMic("تعذّر تشغيل الميكروفون: "+e.message); return; }
   listening=true; $("micBtn").classList.add("on"); $("micBtn").textContent="⏹";
-  setStatus("🔴 أستمع الآن…","تكلّم بوضوح وبجمل قصيرة. اضغط مرة أخرى للإيقاف");
+  if (window.__srMode && window.__srMode()==="dialog") setStatus("🎙️ تكلّم في نافذة Google…","بعد كل جملة اضغط على الميكروفون من جديد");
+  else setStatus("⏳ أجهّز الميكروفون…","انتظر لحظة ثم تكلّم");
   keepAwake(true);
 }
 function stopRec(){
@@ -1060,13 +1102,20 @@ function syncSettings(){
   $("sReads").checked=S.reads; $("sCaps").checked=S.caps; $("sFlash").checked=S.flash; $("sWake").checked=S.wake; $("sContrast").checked=S.contrast; $("sSpeakTap").checked=S.speakTap;
   $("sLang").value=S.lang; $("sEmName").value=S.emName; $("sEmPhone").value=S.emPhone;
   if (document.activeElement!==$("sPhrases")) $("sPhrases").value=(S.phrases||defaultPhrases()).join("\n");
-  renderCardList(); updateBackupUI();
+  renderCardList(); updateBackupUI(); syncSr();
 }
 segBind("sGender","gender"); segBind("sCond","cond"); segBind("sSpeed","speed",true); segBind("sFs","fs",true); segBind("sRate","rate",true);
 $("sName").oninput=e=>{ S.name=e.target.value; save(); applyProfile(); };
 $("sName").onchange=()=>clearCache();
 for (const [id,key] of [["sReads","reads"],["sCaps","caps"],["sFlash","flash"],["sWake","wake"],["sContrast","contrast"],["sSpeakTap","speakTap"]])
   $(id).onchange=e=>{ S[key]=e.target.checked; if(key==="reads") S.caps=S.reads||S.caps; save(); syncSettings(); applyProfile(); };
+function syncSr(){
+  if (!window.AndroidBridge) return;
+  $("srBox").hidden=false;
+  syncSeg("sSr", window.__srMode());
+  try{ const svc=AndroidBridge.serviceInfo(); $("srInfo").textContent = svc==="com.google.android.googlequicksearchbox" ? "خدمة التعرّف: Google ✓" : "خدمة التعرّف: الافتراضية في الهاتف (يُنصح بتثبيت تطبيق Google)"; }catch(e){}
+}
+$("sSr").querySelectorAll("button").forEach(b=>b.onclick=()=>{ try{ localStorage.setItem("sila-srmode",b.dataset.v); }catch(e){} syncSr(); if (listening){ stopRec(); } toast(b.dataset.v==="dialog"?"🎙️ نافذة Google":"🔁 استماع مستمر"); });
 $("sLang").onchange=$("lang").onchange=e=>{ S.lang=e.target.value; save(); syncSettings(); applyProfile(); if (listening){ stopRec(); startRec(); } };
 $("sEmName").oninput=e=>{ S.emName=e.target.value.trim(); save(); };
 $("sEmPhone").oninput=e=>{ S.emPhone=e.target.value.trim(); save(); };
