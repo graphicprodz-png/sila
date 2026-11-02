@@ -424,6 +424,17 @@ footer a{color:inherit;font-weight:500}
         <span class="small" id="keyState"></span>
       </section>
 
+      <section class="set" id="backupBox">
+        <h3>💾 النسخ الاحتياطي (عند تغيير الهاتف)</h3>
+        <p class="small" style="margin:0">احفظ كل شيء في ملف واحد: الإعدادات، صور العائلة، العبارات، المحادثة والجمل المحفوظة. ضعه في <b>Google Drive</b> أو أرسله لنفسك، ثم استرجعه على الهاتف الجديد.</p>
+        <label class="tog"><input type="checkbox" id="bKeys"> تضمين مفاتيح الذكاء الاصطناعي (احتفظ بالملف في مكان آمن)</label>
+        <div class="actions" style="margin:0">
+          <button class="btn" id="bExport">💾 حفظ نسخة احتياطية</button>
+          <label class="btn ghost" style="text-align:center;cursor:pointer">📂 استرجاع نسخة<input type="file" id="bImport" hidden></label>
+        </div>
+        <span class="small" id="bState"></span>
+      </section>
+
       <section class="set">
         <h3>🗂️ البيانات</h3>
         <div class="actions" style="margin:0">
@@ -1049,7 +1060,7 @@ function syncSettings(){
   $("sReads").checked=S.reads; $("sCaps").checked=S.caps; $("sFlash").checked=S.flash; $("sWake").checked=S.wake; $("sContrast").checked=S.contrast; $("sSpeakTap").checked=S.speakTap;
   $("sLang").value=S.lang; $("sEmName").value=S.emName; $("sEmPhone").value=S.emPhone;
   if (document.activeElement!==$("sPhrases")) $("sPhrases").value=(S.phrases||defaultPhrases()).join("\n");
-  renderCardList();
+  renderCardList(); updateBackupUI();
 }
 segBind("sGender","gender"); segBind("sCond","cond"); segBind("sSpeed","speed",true); segBind("sFs","fs",true); segBind("sRate","rate",true);
 $("sName").oninput=e=>{ S.name=e.target.value; save(); applyProfile(); };
@@ -1089,7 +1100,7 @@ $("cAdd").onclick=()=>{
   const card={id:"c"+Date.now().toString(36), type:cType, label, words:$("cWords").value.trim(), img:pendingImg, emoji:emoji||null};
   S.cards.push(card);
   if (!save()){ S.cards.pop(); return; }
-  clearCache(); resetCardForm(); $("cMsg").textContent="✓ أُضيف: "+label; renderCardList(); applyProfile();
+  clearCache(); resetCardForm(); $("cMsg").textContent="✓ أُضيف: "+label; renderCardList(); applyProfile(); updateBackupUI();
 };
 function renderCardList(){
   const el=$("cardList"); el.innerHTML="";
@@ -1111,6 +1122,60 @@ function renderCardList(){
 $("saveKey").onclick=()=>{ apiKey=$("apiKey").value.trim(); ls.set("sila-key",apiKey); $("apiKey").value=""; updateKeyUI(); toast(apiKey?"✓ حُفظ مفتاح Claude":"حُذف مفتاح Claude"); };
 $("saveGem").onclick=()=>{ gemKey=$("gemKey").value.trim(); ls.set("sila-gem",gemKey); $("gemKey").value=""; updateKeyUI(); toast(gemKey?"✓ حُفظ مفتاح Gemini":"حُذف مفتاح Gemini"); };
 $("aiProv").onchange=e=>{ aiProv=e.target.value; ls.set("sila-prov",aiProv); updateKeyUI(); };
+// --- النسخ الاحتياطي ---
+const BACKUP_KEYS=["sila-settings","sila-log","sila-cache","sila-prov"];
+function fmtDate(t){ const d=new Date(t); const p=n=>String(n).padStart(2,"0"); return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+function updateBackupUI(){
+  const t=+ls.get("sila-lastbackup");
+  $("bState").textContent = t ? "✓ آخر نسخة احتياطية: "+fmtDate(t)
+    : (S.cards.length ? "⚠️ لم تحفظ أي نسخة بعد — احفظ واحدة حتى لا تضيع صور العائلة" : "لم تحفظ أي نسخة بعد.");
+}
+function buildBackup(){
+  const data={app:"sila", version:1, created:new Date().toISOString(), items:{}};
+  for (const k of BACKUP_KEYS){ const v=ls.get(k); if (v) data.items[k]=v; }
+  if ($("bKeys").checked){ for (const k of ["sila-key","sila-gem"]){ const v=ls.get(k); if (v) data.items[k]=v; } }
+  return JSON.stringify(data);
+}
+function backupName(){ const d=new Date(), p=n=>String(n).padStart(2,"0"); return `sila-backup-${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}.json`; }
+function backupDone(ok){
+  if (ok){ ls.set("sila-lastbackup",String(Date.now())); toast("✓ حُفظت النسخة الاحتياطية"); }
+  else toast("لم تُحفظ النسخة");
+  updateBackupUI();
+}
+window.__backupSaved = ok => backupDone(!!ok);      // يستدعيه تطبيق أندرويد بعد الحفظ
+$("bExport").onclick=()=>{
+  const json=buildBackup(), name=backupName();
+  if (window.AndroidBridge && AndroidBridge.saveFile){ try{ AndroidBridge.saveFile(name,json); return; }catch(e){} }
+  try{
+    const url=URL.createObjectURL(new Blob([json],{type:"application/json"}));
+    const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000); backupDone(true);
+  }catch(e){ backupDone(false); }
+};
+let pendingRestore=null;
+$("bImport").onchange=e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  const fr=new FileReader();
+  fr.onload=()=>{
+    try{
+      const d=JSON.parse(fr.result);
+      if (d.app!=="sila" || !d.items || !d.items["sila-settings"]) throw new Error("bad");
+      const st=JSON.parse(d.items["sila-settings"]);
+      pendingRestore=d;
+      $("bState").innerHTML="";
+      const msg=document.createElement("span");
+      msg.textContent=`📂 نسخة بتاريخ ${fmtDate(d.created)} — ${st.name||""}، ${(st.cards||[]).length} صورة خاصة. سيتم استبدال البيانات الحالية. `;
+      const ok=document.createElement("button"); ok.className="btn"; ok.textContent="✓ استرجاع الآن"; ok.style.marginTop="8px";
+      ok.onclick=()=>{
+        for (const k of [...BACKUP_KEYS,"sila-key","sila-gem"]) if (k in pendingRestore.items) ls.set(k,pendingRestore.items[k]); else if (k!=="sila-key"&&k!=="sila-gem") ls.set(k,"");
+        ls.set("sila-lastbackup",String(Date.parse(pendingRestore.created)||Date.now()));
+        location.reload();
+      };
+      $("bState").append(msg,ok);
+    }catch(err){ $("bState").textContent="⚠️ هذا الملف ليس نسخة احتياطية صالحة من صِلة"; }
+  };
+  fr.readAsText(f);
+};
 // --- البيانات ---
 $("clearCache").onclick=()=>{ clearCache(); toast("✓ مُسحت الجمل المحفوظة"); };
 $("clearLog").onclick=$("clearLog2").onclick=()=>{ LOG=[]; saveLog(); renderLog(); toast("✓ مُسحت المحادثة"); };

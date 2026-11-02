@@ -24,6 +24,8 @@ import androidx.webkit.WebViewAssetLoader;
 
 import org.json.JSONObject;
 
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -35,6 +37,8 @@ import java.util.Locale;
 public class MainActivity extends Activity {
     private static final int REQ_MIC = 1;
     private static final int REQ_FILE = 2;
+    private static final int REQ_SAVE = 3;
+    private String pendingSave;
     private ValueCallback<Uri[]> fileCallback;
     private static final String HOST = "appassets.androidplatform.net";
 
@@ -113,6 +117,20 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void stopListening() {
             runOnUiThread(() -> { if (recognizer != null) recognizer.cancel(); });
+        }
+
+        /** حفظ النسخة الاحتياطية: يفتح منتقي الملفات (Drive، التنزيلات…) */
+        @JavascriptInterface
+        public void saveFile(String name, String content) {
+            runOnUiThread(() -> {
+                pendingSave = content;
+                Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType("application/json");
+                i.putExtra(Intent.EXTRA_TITLE, name);
+                try { startActivityForResult(i, REQ_SAVE); }
+                catch (Exception e) { pendingSave = null; js("window.__backupSaved&&window.__backupSaved(false)"); }
+            });
         }
 
         @JavascriptInterface
@@ -211,6 +229,10 @@ public class MainActivity extends Activity {
         return (list == null || list.isEmpty()) ? null : list.get(0);
     }
 
+    private void js(String code) {
+        runOnUiThread(() -> web.evaluateJavascript(code, null));
+    }
+
     /** يرسل حدثاً إلى JavaScript: window.__srEvent(type, text, isFinal) */
     private void emit(String type, String text, boolean isFinal) {
         final String js = "window.__srEvent&&window.__srEvent(" + JSONObject.quote(type) + ","
@@ -233,6 +255,18 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_SAVE) {
+            boolean ok = false;
+            if (resultCode == RESULT_OK && data != null && data.getData() != null && pendingSave != null) {
+                try (OutputStream out = getContentResolver().openOutputStream(data.getData(), "wt")) {
+                    out.write(pendingSave.getBytes(StandardCharsets.UTF_8));
+                    ok = true;
+                } catch (Exception ignored) { }
+            }
+            pendingSave = null;
+            js("window.__backupSaved&&window.__backupSaved(" + ok + ")");
+            return;
+        }
         if (requestCode == REQ_FILE && fileCallback != null) {
             fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
             fileCallback = null;
