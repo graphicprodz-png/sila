@@ -14,6 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: قراءة رقم الإصدار وملاحظاته
+        run: |
+          V=$(tr -d '[:space:]' < VERSION)
+          echo "VERSION=$V" >> "$GITHUB_ENV"
+          # ملاحظات هذا الإصدار من CHANGELOG.md (القسم الأول)
+          awk '/^## /{n++} n==1 && !/^## /' CHANGELOG.md > notes.md
+          echo "" >> notes.md
+          echo "📥 رابط ثابت لآخر نسخة: https://github.com/${{ github.repository }}/releases/latest/download/sila.apk" >> notes.md
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -32,21 +41,23 @@ jobs:
         working-directory: android
         run: gradle assembleDebug --no-daemon --stacktrace
 
-      - name: تسمية الملف
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk sila.apk
+      - name: تسمية الملفات
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk sila.apk
+          cp sila.apk "sila-v${VERSION}.apk"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: sila-apk
-          path: sila.apk
+          name: sila-v${{ env.VERSION }}
+          path: sila-v${{ env.VERSION }}.apk
 
-      - name: نشر النسخة في Releases
+      - name: نشر الإصدار في Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: apk-${{ github.run_number }}
-          name: صِلة — نسخة ${{ github.run_number }}
-          body: |
-            حمّل **sila.apk** وثبّته على الهاتف (اسمح بالتثبيت من مصادر غير معروفة).
-            رابط ثابت لآخر نسخة: https://github.com/${{ github.repository }}/releases/latest/download/sila.apk
-          files: sila.apk
+          tag_name: v${{ env.VERSION }}
+          name: صِلة V${{ env.VERSION }}
+          body_path: notes.md
+          files: |
+            sila.apk
+            sila-v${{ env.VERSION }}.apk
           make_latest: true

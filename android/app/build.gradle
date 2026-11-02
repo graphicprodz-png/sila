@@ -2,7 +2,11 @@ plugins {
     id 'com.android.application'
 }
 
-def runNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
+// رقم الإصدار يُقرأ من ملف VERSION في جذر المستودع (مثال: 1.1)
+def appVersion = rootProject.file("../VERSION").text.trim()
+def parts = appVersion.tokenize('.').collect { it.toInteger() }
+// 1.1 → 1010 ، 1.2 → 1020 ، 1.10 → 1100 ، 2.0 → 2000
+def appVersionCode = parts[0] * 1000 + (parts.size() > 1 ? parts[1] : 0) * 10 + (parts.size() > 2 ? parts[2] : 0)
 
 android {
     namespace 'dz.sila.app'
@@ -12,8 +16,8 @@ android {
         applicationId "dz.sila.app"
         minSdk 24
         targetSdk 35
-        versionCode runNumber
-        versionName "1.0.${runNumber}"
+        versionCode appVersionCode
+        versionName appVersion
     }
 
     // مفتاح توقيع ثابت داخل المستودع: كل نسخة جديدة تُثبَّت فوق القديمة دون حذفها
