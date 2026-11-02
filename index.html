@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>صِلة — محادثة مرئية للصم</title>
+<meta name="theme-color" content="#0f766e">
+<meta name="description" content="يحوّل الكلام إلى صور متحركة بسيطة للتواصل مع الأشخاص الصم">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="صِلة">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f4ef; --panel:#ffffff; --ink:#1d2433; --muted:#6b7280; --line:#e5e1d8;
+  --primary:#0f766e; --primary-ink:#ffffff; --accent:#f59e0b; --danger:#dc2626;
+  --heard:#e6f4f1; --me:#fff4dc; --card:#fbfaf7;
+  --fs:1;
+}
+body.contrast{
+  --bg:#000; --panel:#111; --ink:#fff; --muted:#d1d5db; --line:#444;
+  --primary:#fde047; --primary-ink:#000; --heard:#1e293b; --me:#3b2f0b; --card:#1a1a1a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Tajawal",system-ui,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--ink);
+  font-size:calc(17px * var(--fs));line-height:1.5;transition:box-shadow .2s}
+body.flash{box-shadow:inset 0 0 0 10px var(--accent)}
+button{font-family:inherit;font-size:inherit;cursor:pointer;color:inherit}
+.app{max-width:1100px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px;min-height:100%}
+
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.5em}
+.logo .mark{width:44px;height:44px;border-radius:14px;background:var(--primary);color:var(--primary-ink);
+  display:grid;place-items:center;font-size:24px}
+.logo small{display:block;font-size:.5em;font-weight:500;color:var(--muted)}
+.tools{margin-inline-start:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font-size:.85em}
+.chip[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+select.chip{appearance:auto}
+
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:var(--panel);padding:6px;border-radius:16px;border:1px solid var(--line)}
+.tab{border:0;background:transparent;padding:12px 8px;border-radius:12px;font-weight:700;font-size:1em}
+.tab[aria-selected="true"]{background:var(--primary);color:var(--primary-ink)}
+.tab span{display:block;font-size:1.4em}
+
+.view{display:none;flex-direction:column;gap:12px}
+.view.active{display:flex}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px}
+.panel h2{margin:0 0 8px;font-size:1em;color:var(--muted);font-weight:700}
+
+/* LISTEN */
+.mic-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.mic{width:92px;height:92px;border-radius:50%;border:0;background:var(--primary);color:var(--primary-ink);
+  font-size:40px;display:grid;place-items:center;flex:none;position:relative}
+.mic.on{background:var(--danger);color:#fff}
+.mic.on::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:4px solid var(--danger);animation:pulse 1.2s infinite}
+@keyframes pulse{0%{transform:scale(.9);opacity:1}100%{transform:scale(1.25);opacity:0}}
+.status{flex:1;min-width:200px}
+.status b{font-size:1.15em;display:block}
+.status .hint{color:var(--muted);font-size:.9em}
+.live-text{font-size:1.7em;font-weight:700;min-height:1.6em;margin:10px 0 4px;word-break:break-word}
+.live-text .interim{color:var(--muted);font-weight:500}
+.strip{display:flex;flex-wrap:wrap;gap:8px;min-height:120px;align-items:flex-start;direction:rtl}
+.pic{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 10px;min-width:86px;
+  text-align:center;animation:pop .25s ease}
+.pic .e{font-size:calc(46px * var(--fs));line-height:1.1;display:block}
+.pic .w{font-size:.9em;font-weight:700}
+.pic.word{display:flex;align-items:center;justify-content:center;min-height:86px;font-size:1.15em;font-weight:700;color:var(--muted);border-style:dashed}
+.pic.kind-feel{border-color:#f472b6}.pic.kind-need{border-color:#60a5fa}.pic.kind-q{border-color:#a78bfa}
+.pic.kind-urgent{border-color:var(--danger);background:#fee2e2;color:#111}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:none;opacity:1}}
+.type-row{display:flex;gap:8px;margin-top:10px}
+.type-row input{flex:1;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;background:var(--card);color:var(--ink)}
+.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:700;background:var(--primary);color:var(--primary-ink)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.danger{background:var(--danger);color:#fff}
+.notice{background:#fff7ed;border:1px solid #fdba74;color:#7c2d12;border-radius:12px;padding:10px 12px;font-size:.9em;display:none}
+.notice.show{display:block}
+
+/* SPEAK */
+.sentence{display:flex;flex-wrap:wrap;gap:6px;min-height:96px;border:2px dashed var(--line);border-radius:14px;padding:8px;align-items:center}
+.sentence:empty::before{content:"اضغط على الصور بالأسفل لتكوين جملتك…";color:var(--muted)}
+.sentence .pic{cursor:pointer;min-width:74px;padding:6px}
+.sentence .pic .e{font-size:calc(36px * var(--fs))}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.actions .btn{flex:1;min-width:120px;font-size:1.05em}
+.cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.cats .chip{white-space:nowrap;font-size:.95em;padding:8px 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px;margin-top:10px}
+.grid button{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center}
+.grid button:active{transform:scale(.95)}
+.grid .e{font-size:calc(40px * var(--fs));display:block;line-height:1.15}
+.grid .w{font-size:.9em;font-weight:700}
+.sos{width:100%;font-size:1.2em;padding:16px}
+
+/* HISTORY */
+.log{display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;border-radius:16px;padding:10px 12px}
+.msg.heard{background:var(--heard);align-self:flex-start}
+.msg.me{background:var(--me);align-self:flex-end}
+.msg .who{font-size:.8em;color:var(--muted);font-weight:700}
+.msg .t{font-size:1.1em;font-weight:700;margin:2px 0 6px}
+.msg .mini{display:flex;flex-wrap:wrap;gap:4px;font-size:1.6em}
+.empty{color:var(--muted);text-align:center;padding:30px}
+
+/* SHOW SCREEN */
+.big{position:fixed;inset:0;background:var(--primary);color:var(--primary-ink);display:none;flex-direction:column;
+  align-items:center;justify-content:center;padding:24px;text-align:center;z-index:50;gap:20px}
+.big.show{display:flex}
+.big .be{font-size:min(18vw,120px);line-height:1.1}
+.big .bt{font-size:min(9vw,64px);font-weight:800}
+.big .close{position:absolute;top:14px;left:14px;background:rgba(0,0,0,.2);border:0;border-radius:12px;padding:10px 14px;color:inherit}
+.big.sosmode{background:var(--danger);color:#fff;animation:blink 1s infinite}
+@keyframes blink{50%{filter:brightness(1.3)}}
+
+/* STORY STAGE: الصور المتحركة لأمي */
+.stage{position:relative;min-height:230px;border-radius:18px;background:linear-gradient(180deg,#fffaf0,#fdf1d8);
+  display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;padding:16px;overflow:hidden;cursor:pointer}
+body.contrast .stage{background:#111}
+.stage .idle{color:var(--muted);text-align:center}
+.stage .idle .e{font-size:64px;display:block;opacity:.5}
+.scene{display:flex;flex-direction:column;align-items:center;gap:4px}
+.scene .e{font-size:calc(96px * var(--fs));line-height:1.1;display:inline-block}
+.scene .c{font-size:.95em;font-weight:700;color:var(--muted)}
+.scene.dim{opacity:.35;transform:scale(.8);transition:.3s}
+.hidecap .scene .c{display:none}
+.a-bounce{animation:bounce 1s ease-in-out infinite}
+.a-slide{animation:slide 1.6s ease-in-out infinite}
+.a-slideback{animation:slideback 1.6s ease-in-out infinite}
+.a-pulse{animation:beat 1s ease-in-out infinite}
+.a-shake{animation:shake .5s ease-in-out infinite}
+.a-spin{animation:spin 2.5s linear infinite}
+.a-float{animation:float 2.2s ease-in-out infinite}
+.a-grow{animation:grow 1.4s ease-in-out infinite}
+.a-wave{animation:wave 1s ease-in-out infinite;transform-origin:70% 80%}
+.a-nod{animation:nod 1s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
+@keyframes slide{0%{transform:translateX(40px)}50%{transform:translateX(-40px)}100%{transform:translateX(40px)}}
+@keyframes slideback{0%{transform:translateX(-40px)}50%{transform:translateX(40px)}100%{transform:translateX(-40px)}}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px) rotate(-6deg)}75%{transform:translateX(8px) rotate(6deg)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-14px) rotate(3deg)}}
+@keyframes grow{0%,100%{transform:scale(.85)}50%{transform:scale(1.15)}}
+@keyframes wave{0%,100%{transform:rotate(0)}50%{transform:rotate(-25deg)}}
+@keyframes nod{0%,100%{transform:rotate(0)}50%{transform:rotate(12deg) translateY(4px)}}
+.ai-badge{font-size:.75em;background:var(--accent);color:#000;border-radius:999px;padding:2px 8px;margin-inline-start:6px;vertical-align:middle}
+details.settings summary{cursor:pointer;font-weight:700;color:var(--muted)}
+details.settings .type-row input{direction:ltr}
+.small{font-size:.85em;color:var(--muted)}
+.big.storymode{background:#fffaf0;color:#1d2433}
+.big .stage{background:transparent;min-height:60vh;width:100%}
+.big .scene .e{font-size:min(30vw,190px)}
+.big .scene .c{color:inherit;font-size:1.3em}
+
+footer{color:var(--muted);font-size:.8em;text-align:center;padding:8px}
+@media (max-width:600px){.mic{width:76px;height:76px;font-size:32px}.live-text{font-size:1.35em}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo"><div class="mark">🤟</div><div>صِلة<small>كلامك يصبح صوراً متحركة تفهمها أمي</small></div></div>
+    <div class="tools">
+      <select class="chip" id="lang" aria-label="لغة التعرف على الكلام">
+        <option value="ar-DZ">العربية (الجزائر)</option>
+        <option value="ar-SA">العربية الفصحى</option>
+        <option value="ar-EG">العربية (مصر)</option>
+        <option value="ar-MA">العربية (المغرب)</option>
+        <option value="fr-FR">Français</option>
+        <option value="en-US">English</option>
+      </select>
+      <button class="chip" id="fsDown" aria-label="تصغير الخط">أ−</button>
+      <button class="chip" id="fsUp" aria-label="تكبير الخط">أ+</button>
+      <button class="chip" id="contrast" aria-pressed="false">◐ تباين عالٍ</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-v="listen"><span>👂</span>استماع</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="speak"><span>👵</span>لوحة أمي</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="history"><span>💬</span>المحادثة</button>
+  </nav>
+
+  <!-- LISTEN: hearing person speaks -> text + pictures -->
+  <section class="view active" id="v-listen">
+    <div class="notice" id="micNotice"></div>
+    <div class="panel">
+      <div class="mic-row">
+        <button class="mic" id="micBtn" aria-label="ابدأ الاستماع">🎤</button>
+        <div class="status">
+          <b id="statusText">اضغط على الميكروفون ودع الشخص الآخر يتكلم</b>
+          <span class="hint" id="statusHint">سيظهر كلامه نصاً كبيراً وصوراً توضيحية فوراً</span>
+        </div>
+      </div>
+      <div class="live-text" id="liveText" aria-live="polite"></div>
+    </div>
+    <div class="panel">
+      <h2>🎬 ما تراه أمي <span class="ai-badge" id="modeBadge">قاموس</span></h2>
+      <div class="stage" id="stage" title="اضغط لإعادة العرض"><div class="idle"><span class="e">🖼️</span>تكلّم وستظهر الصور هنا متحركة، واحدة بعد الأخرى</div></div>
+      <div class="type-row">
+        <input id="typeIn" placeholder="أو اكتب الجملة هنا (بالدارجة أو الفصحى)…" autocomplete="off">
+        <button class="btn" id="typeGo">حوّل</button>
+      </div>
+      <div class="actions">
+        <button class="btn" id="showHeard">⛶ اعرض لأمي بشاشة كاملة</button>
+        <button class="btn ghost" id="replay">🔁 أعد</button>
+        <button class="btn ghost" id="capToggle">🔤 إخفاء الكتابة</button>
+        <button class="btn ghost" id="clearHeard">🧹 مسح</button>
+      </div>
+      <div class="strip" id="strip" hidden></div>
+    </div>
+    <details class="panel settings">
+      <summary>🤖 الذكاء الاصطناعي (فهم أفضل للدارجة)</summary>
+      <p class="small">بدون ذكاء اصطناعي يستعمل التطبيق قاموساً مدمجاً (يعمل دون إنترنت). مع الذكاء الاصطناعي يفهم معنى الجملة كاملة — حتى بالدارجة — ويختار 1 إلى 5 صور بسيطة مع حركة مناسبة لكل صورة. يحتاج مفتاح Claude API من <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a> (تكلفة زهيدة جداً لكل جملة). يُحفظ المفتاح في هذا الجهاز فقط.</p>
+      <div class="type-row">
+        <input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off">
+        <button class="btn" id="saveKey">حفظ</button>
+      </div>
+      <p class="small" id="keyState"></p>
+    </details>
+  </section>
+
+  <!-- SPEAK: deaf user builds sentence from pictures -> voice -->
+  <section class="view" id="v-speak">
+    <div class="panel">
+      <h2>👵 أمي تشير إلى الصور لتقول ما تريد — اضغط على الجملة لحذف صورة</h2>
+      <div class="sentence" id="sentence"></div>
+      <div class="type-row">
+        <input id="meType" placeholder="أو اكتب ما تريد قوله…" autocomplete="off">
+        <button class="btn ghost" id="meAdd">أضف</button>
+      </div>
+      <div class="actions">
+        <button class="btn" id="sayBtn">🔊 انطق الجملة</button>
+        <button class="btn ghost" id="showMe">⛶ اعرضها للآخر</button>
+        <button class="btn ghost" id="undoBtn">↩︎ تراجع</button>
+        <button class="btn ghost" id="clearMe">🧹 مسح</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="cats" id="cats"></div>
+      <div class="grid" id="grid"></div>
+    </div>
+    <button class="btn danger sos" id="sosBtn">🆘 طوارئ — أحتاج مساعدة</button>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="view" id="v-history">
+    <div class="panel">
+      <div class="log" id="log"></div>
+      <div class="actions"><button class="btn ghost" id="clearLog">🗑️ مسح المحادثة</button></div>
+    </div>
+  </section>
+
+  <footer>صِلة — نموذج أولي. التعرف على الكلام يعمل في Chrome و Edge وSafari الحديثة ويتطلب إذن الميكروفون.</footer>
+</div>
+
+<div class="big" id="big" role="dialog" aria-modal="true">
+  <button class="close" id="bigClose">✕ إغلاق</button>
+  <div class="stage" id="bigStage" hidden></div>
+  <div class="be" id="bigE"></div>
+  <div class="bt" id="bigT"></div>
+</div>
+
+<script>
+/* ============ 1) القاموس المرئي: كلمة → صورة ============ */
+// kind: feel / need / q / urgent (لتلوين البطاقات)
+const RAW = [
+ // تحيات
+ ["السلام عليكم|سلام|مرحبا|اهلا|اهلين|اهلا وسهلا|اهلا بيك|صباح الخير|مساء الخير|صباح النور|مساء النور|bonjour|salut|hello|hi","👋",""],
+ ["وداعا|مع السلامة|بسلامه|الى اللقاء|تصبح على خير|bye|au revoir","🙋‍♂️",""],
+ ["شكرا|شكرًا|يعطيك الصحه|بارك الله فيك|صحيت|merci|thanks|thank","🙏",""],
+ ["عفوا|من فضلك|لو سمحت|يرحم والديك|svp|please","🤲",""],
+ ["اسف|متاسف|سامحني|pardon|sorry","😔","feel"],
+ ["نعم|ايه|واه|اي|اجل|oui|yes","✅",""],
+ ["لا|لالا|كلا|non|no","❌",""],
+ ["ممكن|ربما|يمكن|peut-etre|maybe","🤔",""],
+ ["حسنا|طيب|واخا|مليح|ok|okay|d'accord|خلاص","👌",""],
+ // أسئلة
+ ["ماذا|ما|واش|شنو|ايش|شو|quoi|what","❓","q"],
+ ["من|شكون|مين|qui|who","🧑❓","q"],
+ ["اين|وين|فين|ou|where","📍❓","q"],
+ ["متى|وقتاش|امتى|quand|when","🕒❓","q"],
+ ["كيف|كيفاش|ازاي|comment|how","❔","q"],
+ ["لماذا|علاش|ليش|ليه|pourquoi|why","🤷","q"],
+ ["كم|قداش|بكم|combien","🔢❓","q"],
+ ["هل","❓","q"],
+ // أشخاص
+ ["انا|je|moi|i","🙋",""],["انت|انتي|انتم|نتا|نتي|tu|vous|you","👉",""],["نحن|احنا|حنا|nous|we","👥",""],
+ ["هو|il|he","👨",""],["هي|elle|she","👩",""],
+ ["ام|امي|ماما|يما|يماه|الوالده|والده|mere|maman|mother|mom","👩‍👧",""],["اب|ابي|بابا|بويا|الوالد|والد|pere|papa|father|dad","👨‍👦",""],
+ ["اخ|اخي|خويا|frere|brother","👦",""],["اخت|اختي|ختي|soeur|sister","👧",""],
+ ["طفل|ولد|بنت|اطفال|ذراري|enfant|child|kid","🧒",""],["عائله|اسره|لفاميليا|famille|family","👨‍👩‍👧‍👦",""],
+ ["صديق|صاحب|صاحبي|ami|friend","🧑‍🤝‍🧑",""],["رجل|راجل|homme|man","👨",""],["امراه|مراه|femme|woman","👩",""],
+ ["طبيب|دكتور|طبيبه|الطبيب|طبيبه|medecin|docteur|doctor","🧑‍⚕️",""],["معلم|استاذ|استاذه|معلمه|professeur|teacher","🧑‍🏫",""],
+ ["شرطه|بوليس|شرطي|police","👮",""],["اسم|اسمي|اسمك|nom|name","🏷️",""],
+ // أماكن
+ ["بيت|منزل|دار|الدار|maison|home|house","🏠",""],["مدرسه|ليكول|ecole|school","🏫",""],
+ ["مستشفى|سبيطار|hopital|hospital","🏥","urgent"],["صيدليه|فارماسي|pharmacie|pharmacy","💊",""],
+ ["سوق|مارشي|marche|market","🛒",""],["محل|حانوت|متجر|magasin|shop|store","🏪",""],
+ ["عمل|خدمه|شغل|وظيفه|travail|work|job","💼",""],["مسجد|جامع|mosquee|mosque","🕌",""],
+ ["بنك|banque|bank","🏦",""],["بريد|لابوست|poste","📮",""],["مطعم|restaurant","🍽️",""],
+ ["مكتب|bureau|office","🏢",""],["شارع|طريق|زنقه|rue|road|street","🛣️",""],
+ ["مدينه|ville|city","🏙️",""],["بحر|mer|sea","🌊",""],["حمام|توالات|toilettes|toilet|wc","🚻","need"],
+ ["غرفه|بيت النوم|chambre|room","🛏️",""],["باب|porte|door","🚪",""],
+ // مواصلات
+ ["سياره|طوموبيل|كرهبه|voiture|car","🚗",""],["حافله|باص|طوبيس|bus","🚌",""],["تاكسي|taxi","🚕",""],
+ ["قطار|تران|train","🚆",""],["طائره|طياره|avion|plane","✈️",""],["ترامواي|tram","🚊",""],
+ // أفعال
+ ["اكل|ياكل|ناكل|تاكل|كول|manger|eat","🍽️","need"],["شرب|يشرب|نشرب|اشرب|boire|drink","🥤","need"],
+ ["نوم|نام|ينام|نرقد|رقد|dormir|sleep","😴",""],["ذهب|اذهب|يذهب|روح|نروح|راح|امشي|نمشي|مشى|رايح|رايحه|رايحين|نروحو|aller|go","🚶➡️",""],
+ ["جاء|تعال|يجي|نجي|اجي|جيت|جاي|جايه|جايين|جا|جات|venir|come","🚶⬅️",""],["انتظر|استنى|اصبر|ترجى|attendre|wait","⏳",""],
+ ["اجلس|قعد|اقعد|يجلس|asseoir|sit","🪑",""],["قم|نوض|قوم|lever|stand","🧍",""],
+ ["اكتب|كتب|يكتب|ecrire|write","✍️",""],["اقرا|قرا|يقرا|lire|read","📖",""],
+ ["تكلم|يتكلم|قال|قل|احكي|هدر|parler|dire|speak|say|talk","🗣️",""],["اسمع|سمع|يسمع|ecouter|listen|hear","👂",""],
+ ["انظر|شوف|ريقارد|نشوف|يرى|رؤيه|regarder|voir|look|see","👀",""],["اعرف|يعرف|نعرف|عرف|نعرفش|savoir|know","🧠",""],
+ ["فهم|افهم|يفهم|فاهم|فهمت|comprendre|understand","💡",""],["اريد|حاب|نحب|بغيت|عايز|ابغى|vouloir|want","🫴",""],
+ ["احب|حب|يحب|aimer|love","❤️","feel"],["ساعد|ساعدني|عاون|عاوني|مساعده|aide|aider|help","🆘","urgent"],
+ ["اشترى|شرى|نشري|يشري|شراء|acheter|buy","🛍️",""],["دفع|خلص|نخلص|payer|pay","💳",""],
+ ["اتصل|عيط|تلفن|appeler|call","📞",""],["لعب|يلعب|نلعب|jouer|play","⚽",""],
+ ["غسل|اغسل|laver|wash","🧼",""],["طبخ|يطبخ|cuisiner|cook","🍳",""],["افتح|حل|ouvrir|open","🔓",""],["اغلق|سكر|فرمي|fermer|close","🔒",""],
+ ["اعطني|عطيني|اعطي|donner|give","🤲",""],["خذ|اخذ|دي|prendre|take","✋",""],["سافر|سفر|voyager|travel","🧳",""],
+ ["تعلم|يتعلم|قرايه|دراسه|apprendre|learn|study","📚",""],["صلاه|صلى|نصلي|priere|pray","🤲",""],
+ ["ابتسم|ضحك|يضحك|rire|laugh","😂","feel"],["بكى|يبكي|بكاء|pleurer|cry","😢","feel"],
+ // مشاعر وحالات
+ ["سعيد|فرحان|فرح|مبسوط|فرحانه|heureux|happy","😊","feel"],["حزين|حزينه|قلقان|triste|sad","😢","feel"],
+ ["غاضب|زعفان|متنرفز|معصب|colere|angry","😠","feel"],["خائف|خايف|خوف|peur|afraid|scared","😨","feel"],
+ ["متعب|عيان|تعبان|fatigue|tired","😩","feel"],["مريض|مرض|مريضه|malade|sick|ill","🤒","urgent"],
+ ["الم|وجع|يوجعني|يضرني|douleur|mal|pain|hurt","🤕","urgent"],["جائع|جيعان|جوعان|جوع|faim|hungry","🍽️😋","need"],
+ ["عطشان|عطش|soif|thirsty","💧","need"],["بارد|برد|البرد|froid|cold","🥶",""],["حار|سخون|حر|سخونه|chaud|hot","🥵",""],
+ ["جميل|زين|مزيان|شباب|beau|joli|beautiful|nice","🌟",""],["جيد|ملیح|منيح|bien|bon|good","👍",""],["سيء|خايب|mauvais|bad","👎",""],
+ ["كبير|grand|big","🐘",""],["صغير|petit|small","🐭",""],["سريع|بالخف|vite|rapide|fast","⚡",""],["بطيء|بشويه|doucement|lent|slow","🐢",""],
+ ["مشغول|occupe|busy","⌛",""],["مستعجل|عاجل|urgent","🚨","urgent"],["خطر|danger","⚠️","urgent"],
+ // أكل وشرب
+ ["ماء|ما|الماء|eau|water","💧",""],["خبز|كسره|خبزه|pain|bread","🍞",""],["قهوه|كافي|cafe|coffee","☕",""],
+ ["شاي|اتاي|the|tea","🍵",""],["حليب|حليب|lait|milk","🥛",""],["لحم|viande|meat","🥩",""],["دجاج|جاج|poulet|chicken","🍗",""],
+ ["سمك|حوت|poisson|fish","🐟",""],["فواكه|فاكهه|fruits","🍎",""],["تفاح|pomme|apple","🍎",""],["برتقال|تشينه|orange","🍊",""],
+ ["خضر|خضره|legumes|vegetables","🥦",""],["بيض|oeuf|egg","🥚",""],["رز|ارز|riz|rice","🍚",""],["كسكس|couscous","🍲",""],
+ ["حلوى|حلويات|gateau|cake","🍰",""],["فطور|petit-dejeuner|breakfast","🥐",""],["غداء|غدا|dejeuner|lunch","🍲",""],["عشاء|عشا|diner|dinner","🍛",""],
+ // صحة
+ ["دواء|دوا|medicament|medicine","💊",""],["حقنه|ابره|piqure|injection","💉",""],["اسعاف|لاسعاف|ambulance","🚑","urgent"],
+ ["راس|راسي|tete|head","🤯",""],["بطن|كرش|ventre|stomach","🫃",""],["سن|ضرس|اسنان|dent|tooth","🦷",""],["قلب|coeur|heart","❤️",""],
+ ["عين|عينين|oeil|eye","👁️",""],["اذن|ودن|oreille|ear","👂",""],["يد|يدي|main|hand","✋",""],["رجل|كراع|jambe|leg","🦵",""],
+ ["اصم|صم|اطرش|sourd|deaf","🧏",""],["حريق|نار|feu|fire","🔥","urgent"],["حادث|accident","💥","urgent"],
+ // وقت
+ ["اليوم|ليوم|aujourd'hui|today","📅",""],["غدا|غدوه|demain|tomorrow","📅➡️",""],["امس|البارح|hier|yesterday","⬅️📅",""],
+ ["الان|دروك|توا|دابا|maintenant|now","⏱️",""],["بعد|من بعد|apres|later|after","⏩",""],["قبل|avant|before","⏪",""],
+ ["ساعه|وقت|heure|temps|time|hour","🕒",""],["دقيقه|minute","⏲️",""],["صباح|صباحا|الصباح|matin|morning","🌅",""],
+ ["ليل|ليلا|الليل|nuit|night","🌙",""],["مساء|عشيه|soir|evening","🌇",""],["اسبوع|semaine|week","🗓️",""],["شهر|mois|month","🗓️",""],["سنه|عام|annee|year","📆",""],
+ // أشياء
+ ["هاتف|تليفون|بورطابل|telephone|phone","📱",""],["مال|فلوس|دراهم|نقود|argent|money","💰",""],["مفتاح|cle|key","🔑",""],
+ ["كتاب|livre|book","📕",""],["قلم|stylo|pen","🖊️",""],["ورقه|papier|paper","📄",""],["حاسوب|كمبيوتر|ordinateur|computer","💻",""],
+ ["ملابس|حوايج|قش|vetements|clothes","👕",""],["حذاء|صباط|chaussures|shoes","👟",""],["ساعه يد|montre|watch","⌚",""],
+ ["سياره اسعاف","🚑","urgent"],["شمس|soleil|sun","☀️",""],["مطر|نو|pluie|rain","🌧️",""],["ريح|vent|wind","🌬️",""],
+ ["قط|قطه|مش|chat|cat","🐈",""],["كلب|كلب|chien|dog","🐕",""],["وردة|ورد|fleur|flower","🌸",""],
+ ["موعد|rendez-vous|appointment","📆",""],["ورقه هويه|بطاقه|carte|card","🪪",""],["تذكره|بيي|ticket","🎫",""],
+ // أرقام
+ ["واحد|un|one|1","1️⃣",""],["اثنان|اثنين|زوج|deux|two|2","2️⃣",""],["ثلاثه|ثلاث|trois|three|3","3️⃣",""],["اربعه|اربع|quatre|four|4","4️⃣",""],
+ ["خمسه|خمس|cinq|five|5","5️⃣",""],["سته|ست|six|6","6️⃣",""],["سبعه|سبع|sept|seven|7","7️⃣",""],["ثمانيه|ثمانية|ثمن|huit|eight|8","8️⃣",""],
+ ["تسعه|تسع|neuf|nine|9","9️⃣",""],["عشره|عشر|dix|ten|10","🔟",""],
+ // اتجاهات
+ ["هنا|هنايا|ici|here","📍",""],["هناك|لهيه|la-bas|there","👉📍",""],["يمين|ليمين|droite|right","➡️",""],["يسار|ليسار|gauche|left","⬅️",""],
+ ["فوق|haut|up","⬆️",""],["تحت|bas|down","⬇️",""],["قريب|proche|near","🤏",""],["بعيد|loin|far","🔭",""],
+ ["مع|avec|with","🤝",""],["بدون|sans|without","🚫",""],["كثير|بزاف|برشا|beaucoup|much|many|lot","➕",""],["قليل|شويه|شوي|peu|little","➖",""],
+ ["كل|tout|all","💯",""],["لا شيء|والو|walou|rien|nothing","🈳",""]
+];
+const STOP = new Set(["في","على","الى","إلى","عن","ان","أن","إن","يا","او","أو","ثم","لكن","و","ب","ل","هذا","هذه","ذلك","تلك","الذي","التي","قد","لقد","ال","le","la","les","de","des","du","un","une","et","a","the","an","of","to","is","are","est"]);
+
+const norm = s => s.toLowerCase()
+  .replace(/[ً-ٰٟـ]/g,"")
+  .replace(/[أإآٱ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/ؤ/g,"و").replace(/ئ/g,"ي")
+  .replace(/[éèêë]/g,"e").replace(/[àâ]/g,"a").replace(/[ôö]/g,"o").replace(/[îï]/g,"i").replace(/[ûü]/g,"u").replace(/ç/g,"c")
+  .replace(/[^\p{L}\p{N}' -]/gu," ").trim();
+
+const DICT = new Map(); // normalized key -> {e, kind}
+let MAXN = 1;
+for (const [keys,e,kind] of RAW) for (const k of keys.split("|")) {
+  const n = norm(k); if (!n) continue;
+  if (!DICT.has(n)) DICT.set(n,{e,kind});
+  MAXN = Math.max(MAXN, n.split(" ").length);
+}
+const PREF = ["وبال","وال","بال","فال","كال","لل","ال","و","ف","ب","ل","ك","س"];
+const SUFF = ["هما","كما","ها","هم","كم","كن","نا","ني","ك","ه","ي","ات","ون","ين","ان","وا","ت","s"];
+function lookupWord(w){
+  if (DICT.has(w)) return DICT.get(w);
+  const cands = new Set([w]);
+  for (const p of PREF) if (w.startsWith(p) && w.length-p.length>=2) cands.add(w.slice(p.length));
+  for (const c of [...cands]) for (const s of SUFF) if (c.endsWith(s) && c.length-s.length>=2) cands.add(c.slice(0,-s.length));
+  for (const c of cands) if (DICT.has(c)) return DICT.get(c);
+  return null;
+}
+// يحوّل جملة إلى قائمة بطاقات (يبحث عن العبارات متعددة الكلمات أولاً)
+function toPictos(text){
+  const orig = text.split(/\s+/).filter(Boolean);
+  const nw = orig.map(norm);
+  const out = [];
+  for (let i=0;i<nw.length;){
+    let hit=null, len=1;
+    for (let n=Math.min(MAXN,nw.length-i); n>=2; n--){
+      const ph = nw.slice(i,i+n).join(" ");
+      if (DICT.has(ph)){ hit=DICT.get(ph); len=n; break; }
+    }
+    if (!hit) hit = nw[i] ? lookupWord(nw[i]) : null;
+    const word = orig.slice(i,i+len).join(" ");
+    if (hit) out.push({w:word.replace(/[؟?!.,،]/g,""), e:hit.e, kind:hit.kind});
+    else if (nw[i] && !STOP.has(nw[i])) out.push({w:word.replace(/[؟?!.,،]/g,""), e:null});
+    i+=len;
+  }
+  return out;
+}
+
+/* ============ 2) أدوات العرض ============ */
+const $ = id => document.getElementById(id);
+function picEl(p){
+  const d = document.createElement("div");
+  if (p.e){ d.className="pic"+(p.kind?" kind-"+p.kind:""); d.innerHTML=`<span class="e">${p.e}</span><span class="w"></span>`; d.querySelector(".w").textContent=p.w; }
+  else { d.className="pic word"; d.textContent=p.w; }
+  return d;
+}
+function flash(){
+  document.body.classList.add("flash"); setTimeout(()=>document.body.classList.remove("flash"),500);
+  try{ navigator.vibrate && navigator.vibrate([120,60,120]); }catch(e){}
+}
+
+/* ============ 3) سجل المحادثة ============ */
+let LOG = [];
+try{ LOG = JSON.parse(localStorage.getItem("sila-log")||"[]"); }catch(e){}
+function saveLog(){ try{ localStorage.setItem("sila-log", JSON.stringify(LOG.slice(-200))); }catch(e){} }
+function addLog(who,text,pics){ LOG.push({who,text,pics:pics.filter(p=>p.e).map(p=>p.e),t:Date.now()}); saveLog(); renderLog(); }
+function renderLog(){
+  const el=$("log"); el.innerHTML="";
+  if (!LOG.length){ el.innerHTML='<div class="empty">لا توجد رسائل بعد.<br>ابدأ من تبويب «استماع» أو «تكلّم».</div>'; return; }
+  for (const m of LOG){
+    const d=document.createElement("div"); d.className="msg "+m.who;
+    const time=new Date(m.t).toLocaleTimeString("ar",{hour:"2-digit",minute:"2-digit"});
+    d.innerHTML=`<div class="who">${m.who==="heard"?"👂 الطرف الآخر":"🧏 أنا"} · ${time}</div><div class="t"></div><div class="mini"></div>`;
+    d.querySelector(".t").textContent=m.text; d.querySelector(".mini").textContent=m.pics.join(" ");
+    el.appendChild(d);
+  }
+}
+
+/* ============ 4) وضع الاستماع: كلام → نص + صور ============ */
+let heardPics=[], lastHeardText="", reqId=0;
+
+// اختيار حركة بسيطة لكل صورة
+const ANIM_BY_EMOJI = {"👋":"wave","🙋‍♂️":"wave","🚶➡️":"slide","🚶⬅️":"slideback","😴":"float","🚗":"slide","🚌":"slide","🚕":"slide","🚆":"slide","✈️":"float","🚑":"slide","❤️":"pulse","✅":"nod","❌":"shake","⏳":"spin","🕒":"spin","🍽️":"bounce","💧":"float","🔥":"grow","🆘":"shake","🙏":"nod","☀️":"spin","🌧️":"float"};
+function animFor(p){
+  if (ANIM_BY_EMOJI[p.e]) return ANIM_BY_EMOJI[p.e];
+  if (p.kind==="urgent") return "shake";
+  if (p.kind==="feel") return "pulse";
+  if (p.kind==="q") return "nod";
+  return ["bounce","grow","float"][(p.e||"").length%3];
+}
+// من بطاقات القاموس إلى مشاهد (نتجاهل الكلمات بلا صورة، لأن أمي لا تقرأ)
+const dictScenes = pics => pics.filter(p=>p.e).map(p=>({e:p.e,c:p.w,a:animFor(p)}));
+
+// عرض المشاهد واحدة بعد الأخرى ثم كلها معاً
+const timers = new Map();
+function playStory(el, scenes, loop){
+  clearInterval(timers.get(el)); el.innerHTML="";
+  if (!scenes.length){ el.innerHTML='<div class="idle"><span class="e">🤷</span>لم أجد صوراً لهذه الجملة — جرّب كلمات أبسط أو فعّل الذكاء الاصطناعي</div>'; return; }
+  const nodes = scenes.map(s=>{
+    const d=document.createElement("div"); d.className="scene dim";
+    d.innerHTML=`<span class="e a-${s.a||"bounce"}"></span><span class="c"></span>`;
+    d.querySelector(".e").textContent=s.e; d.querySelector(".c").textContent=s.c||"";
+    el.appendChild(d); return d;
+  });
+  let i=0;
+  const step=()=>{
+    if (i<nodes.length){ nodes.forEach((n,k)=>n.classList.toggle("dim",k!==i)); i++; }
+    else { nodes.forEach(n=>n.classList.remove("dim")); if (loop) i=0; else clearInterval(timers.get(el)); }
+  };
+  step(); timers.set(el, setInterval(step, nodes.length>1?1600:99999));
+}
+
+// الذكاء الاصطناعي: يفهم الجملة ويختار صوراً بسيطة
+const AI_MODEL="claude-haiku-5-5";
+let apiKey=""; try{ apiKey=localStorage.getItem("sila-key")||""; }catch(e){}
+const SYS = `أنت تساعد ابناً يتحدث مع أمه المسنّة في الجزائر. الأم صمّاء (فقدت السمع بعد أن كانت تسمع) ولا تعرف القراءة ولا الكتابة، لذلك تفهم فقط الصور.
+حوّل الجملة المسموعة (قد تكون بالدارجة الجزائرية أو الفصحى أو الفرنسية وقد تحتوي أخطاء التعرف على الصوت) إلى قصة مصوّرة قصيرة جداً.
+القواعد:
+- من 1 إلى 5 مشاهد بالترتيب المنطقي للمعنى. الأقل أفضل.
+- كل مشهد إيموجي واحد أو اثنان كحد أقصى، ملموس وواضح لامرأة مسنّة (أشخاص، أماكن، أكل، أفعال، مشاعر). تجنّب الرموز المجردة والحروف.
+- اجعل السؤال واضحاً بإضافة ❓ في آخر مشهد إن كانت الجملة سؤالاً. النفي: أضف ❌ بعد الشيء المنفي.
+- للزمن: 🌅 صباحاً، 🌙 ليلاً، 📅➡️ غداً، ⬅️📅 أمس، ⏱️ الآن.
+- c: كلمة أو كلمتان بالدارجة الجزائرية تصف المشهد (للابن فقط).
+- a: حركة واحدة من: bounce, slide, slideback, pulse, shake, spin, float, grow, wave, nod — اختر ما يعبّر عن المعنى (slide للذهاب، slideback للمجيء، wave للتحية، pulse للحب والمشاعر، shake للألم أو الخطر أو الرفض، float للنوم والماء، nod للموافقة والسؤال، spin للانتظار والوقت).
+أجب بـ JSON فقط بدون أي نص آخر، بهذا الشكل: {"scenes":[{"e":"🏥","c":"سبيطار","a":"bounce"}]}`;
+async function aiScenes(text){
+  const r = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+    headers:{"x-api-key":apiKey,"anthropic-version":"2023-06-01","content-type":"application/json","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:AI_MODEL,max_tokens:500,system:SYS,messages:[{role:"user",content:text}]})});
+  if (!r.ok) throw new Error("HTTP "+r.status);
+  const j = await r.json();
+  const t = (j.content||[]).map(b=>b.text||"").join("");
+  const m = t.match(/\{[\s\S]*\}/); if (!m) throw new Error("bad json");
+  const sc = (JSON.parse(m[0]).scenes||[]).filter(s=>s&&s.e).slice(0,5);
+  return sc.map(s=>({e:String(s.e),c:String(s.c||""),a:/^(bounce|slide|slideback|pulse|shake|spin|float|grow|wave|nod)$/.test(s.a)?s.a:"bounce"}));
+}
+function updateKeyUI(){
+  $("modeBadge").textContent = apiKey ? "ذكاء اصطناعي" : "قاموس";
+  $("keyState").textContent = apiKey ? "✅ الذكاء الاصطناعي مفعّل." : "الذكاء الاصطناعي غير مفعّل — يعمل القاموس فقط.";
+}
+$("saveKey").onclick=()=>{ apiKey=$("apiKey").value.trim(); try{ apiKey?localStorage.setItem("sila-key",apiKey):localStorage.removeItem("sila-key"); }catch(e){} $("apiKey").value=""; updateKeyUI(); };
+
+let curScenes=[];
+async function showHeard(text, final){
+  if (!final) return;
+  const pics = toPictos(text);
+  heardPics = pics; lastHeardText=text;
+  const my = ++reqId;
+  curScenes = dictScenes(pics);
+  playStory($("stage"), curScenes, false);   // عرض فوري بالقاموس
+  flash();
+  if (apiKey){
+    $("modeBadge").textContent="… يفكّر";
+    try{
+      const sc = await aiScenes(text);
+      if (my!==reqId) return;
+      if (sc.length){ curScenes=sc; playStory($("stage"), sc, false); if ($("big").classList.contains("show")&&!$("bigStage").hidden) playStory($("bigStage"), sc, true); }
+      $("modeBadge").textContent="ذكاء اصطناعي";
+    }catch(e){
+      $("modeBadge").textContent="قاموس (تعذّر الاتصال)";
+    }
+  }
+  addLog("heard", text, curScenes.map(s=>({e:s.e})));
+}
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec=null, listening=false, finalText="";
+function setStatus(t,h){ $("statusText").textContent=t; $("statusHint").textContent=h||""; }
+function noticeMic(msg){ const n=$("micNotice"); n.innerHTML=msg; n.classList.add("show"); }
+
+function startRec(){
+  if (!SR){ noticeMic("⚠️ متصفحك لا يدعم التعرف على الكلام. استخدم <b>Google Chrome</b> أو <b>Edge</b>، أو اكتب الجملة في الخانة أدناه."); return; }
+  rec = new SR();
+  rec.lang = $("lang").value; rec.continuous = true; rec.interimResults = true;
+  rec.onresult = ev => {
+    let interim="";
+    for (let i=ev.resultIndex;i<ev.results.length;i++){
+      const r=ev.results[i];
+      if (r.isFinal){ const t=r[0].transcript.trim(); if(t){ finalText=t; showHeard(t,true); } }
+      else interim += r[0].transcript;
+    }
+    const lt=$("liveText"); lt.textContent = finalText;
+    if (interim){ const s=document.createElement("span"); s.className="interim"; s.textContent=(finalText?" … ":"")+interim; lt.appendChild(s); }
+  };
+  rec.onerror = e => {
+    if (e.error==="not-allowed"||e.error==="service-not-allowed"){
+      stopRec();
+      noticeMic("🎤 لم يُسمح باستخدام الميكروفون. اسمح بالإذن من شريط العنوان، أو افتح الملف مباشرة في Chrome. يمكنك دائماً كتابة الجملة يدوياً.");
+    } else if (e.error==="network"){ setStatus("⚠️ خطأ في الشبكة","التعرف على الكلام في Chrome يحتاج اتصالاً بالإنترنت"); }
+  };
+  rec.onend = () => { if (listening) { try{ rec.start(); }catch(e){} } };
+  try{ rec.start(); }catch(e){ noticeMic("تعذّر تشغيل الميكروفون: "+e.message); return; }
+  listening=true; $("micBtn").classList.add("on"); $("micBtn").textContent="⏹";
+  setStatus("🔴 أستمع الآن…","تكلّم بوضوح وقرب الهاتف. اضغط مرة أخرى للإيقاف");
+}
+function stopRec(){
+  listening=false; try{ rec && rec.stop(); }catch(e){}
+  $("micBtn").classList.remove("on"); $("micBtn").textContent="🎤";
+  setStatus("اضغط على الميكروفون ودع الشخص الآخر يتكلم","سيظهر كلامه نصاً كبيراً وصوراً توضيحية فوراً");
+}
+$("micBtn").onclick = () => listening ? stopRec() : startRec();
+$("lang").onchange = () => { if (listening){ stopRec(); startRec(); } };
+function typedHeard(){ const v=$("typeIn").value.trim(); if(!v) return; finalText=v; $("liveText").textContent=v; showHeard(v,true); $("typeIn").value=""; }
+$("typeGo").onclick = typedHeard;
+$("typeIn").onkeydown = e => { if (e.key==="Enter") typedHeard(); };
+$("clearHeard").onclick = () => { $("stage").innerHTML='<div class="idle"><span class="e">🖼️</span>تكلّم وستظهر الصور هنا متحركة، واحدة بعد الأخرى</div>'; $("liveText").textContent=""; finalText=""; heardPics=[]; lastHeardText=""; curScenes=[]; };
+$("replay").onclick = () => curScenes.length && playStory($("stage"), curScenes, false);
+$("stage").onclick = () => curScenes.length && playStory($("stage"), curScenes, false);
+$("capToggle").onclick = e => { const on=document.body.classList.toggle("hidecap"); e.target.textContent = on ? "🔤 إظهار الكتابة" : "🔤 إخفاء الكتابة"; };
+$("showHeard").onclick = () => { if (!curScenes.length) return; openStory(curScenes); };
+
+/* ============ 5) وضع التكلم: صور → صوت ============ */
+const BOARD = {
+ "⭐ سريع":[["👋","السلام عليكم"],["🙏","شكراً"],["🧏","أنا أصم، اكتب لي من فضلك"],["✅","نعم"],["❌","لا"],["⏳","انتظر قليلاً"],["🔁","أعد من فضلك ببطء"],["💡","فهمت"],["🤷","لم أفهم"],["✍️","اكتب لي"],["📱","تكلّم قرب الهاتف"],["🙋‍♂️","مع السلامة"]],
+ "🙋 أنا":[["🙋","أنا"],["🫴","أريد"],["🚫","لا أريد"],["❤️","أحب"],["🧭","أبحث عن"],["🚶➡️","أذهب إلى"],["🆘","أحتاج مساعدة"],["❓","أين"],["🔢❓","كم الثمن؟"],["🕒❓","متى؟"],["❔","كيف؟"],["👉","أنت"]],
+ "😊 مشاعر":[["😊","أنا سعيد"],["😢","أنا حزين"],["😩","أنا متعب"],["😨","أنا خائف"],["😠","أنا غاضب"],["🤒","أنا مريض"],["🤕","أشعر بألم"],["🍽️😋","أنا جائع"],["💧","أنا عطشان"],["🥶","أشعر بالبرد"],["🥵","أشعر بالحر"],["😴","أريد أن أنام"]],
+ "🍞 أكل":[["💧","ماء"],["🍞","خبز"],["☕","قهوة"],["🍵","شاي"],["🥛","حليب"],["🍗","دجاج"],["🥩","لحم"],["🐟","سمك"],["🍲","كسكس"],["🍎","فواكه"],["🥦","خضر"],["🍰","حلوى"]],
+ "📍 أماكن":[["🏠","البيت"],["🏥","المستشفى"],["💊","الصيدلية"],["🏫","المدرسة"],["💼","العمل"],["🛒","السوق"],["🏦","البنك"],["📮","البريد"],["🕌","المسجد"],["🚻","الحمام"],["🚌","موقف الحافلة"],["🚕","تاكسي"]],
+ "🏥 صحة":[["🧑‍⚕️","طبيب"],["💊","دواء"],["🤯","رأسي يؤلمني"],["🫃","بطني يؤلمني"],["🦷","ضرسي يؤلمني"],["❤️","قلبي"],["🌡️","عندي حمّى"],["🤢","أشعر بالغثيان"],["💉","حقنة"],["🚑","سيارة إسعاف"],["🩸","أنزف"],["🪪","هذه بطاقتي"]],
+ "👨‍👩‍👧 أشخاص":[["👩‍👧","أمي"],["👨‍👦","أبي"],["👦","أخي"],["👧","أختي"],["🧒","طفلي"],["🧑‍🤝‍🧑","صديقي"],["👨‍👩‍👧‍👦","عائلتي"],["🧑‍🏫","المعلم"],["👮","الشرطة"],["📞","اتصل بـ"]],
+ "🕒 وقت":[["⏱️","الآن"],["📅","اليوم"],["📅➡️","غداً"],["⬅️📅","أمس"],["🌅","صباحاً"],["🌇","مساءً"],["🌙","ليلاً"],["⏩","بعد قليل"],["🕒","ساعة"],["⏲️","دقيقة"],["1️⃣","واحد"],["2️⃣","اثنان"]]
+};
+let curCat = Object.keys(BOARD)[0], sentence=[];
+function renderCats(){
+  const c=$("cats"); c.innerHTML="";
+  for (const k of Object.keys(BOARD)){
+    const b=document.createElement("button"); b.className="chip"; b.textContent=k; b.setAttribute("aria-pressed",k===curCat);
+    b.onclick=()=>{curCat=k;renderCats();renderGrid();}; c.appendChild(b);
+  }
+}
+function renderGrid(){
+  const g=$("grid"); g.innerHTML="";
+  for (const [e,w] of BOARD[curCat]){
+    const b=document.createElement("button"); b.innerHTML=`<span class="e">${e}</span><span class="w"></span>`; b.querySelector(".w").textContent=w;
+    b.onclick=()=>{ sentence.push({e,w}); renderSentence(); }; g.appendChild(b);
+  }
+}
+function renderSentence(){
+  const s=$("sentence"); s.innerHTML="";
+  sentence.forEach((p,i)=>{ const el=picEl(p); el.title="اضغط للحذف"; el.onclick=()=>{sentence.splice(i,1);renderSentence();}; s.appendChild(el); });
+}
+const sentText = () => sentence.map(p=>p.w).join(" ").replace(/\s+([؟?])/g,"$1");
+function speak(text){
+  if (!("speechSynthesis" in window)) return false;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    const lang=$("lang").value; u.lang=lang; u.rate=.95;
+    const vs=speechSynthesis.getVoices(); const base=lang.split("-")[0];
+    const v=vs.find(v=>v.lang===lang)||vs.find(v=>v.lang&&v.lang.startsWith(base));
+    if (v) u.voice=v;
+    speechSynthesis.speak(u); return true;
+  }catch(e){ return false; }
+}
+$("meAdd").onclick=()=>{ const v=$("meType").value.trim(); if(!v) return;
+  const ps=toPictos(v); if(!ps.length) ps.push({w:v,e:null}); ps.forEach(p=>sentence.push(p)); $("meType").value=""; renderSentence(); };
+$("meType").onkeydown=e=>{ if(e.key==="Enter") $("meAdd").click(); };
+$("sayBtn").onclick=()=>{ if(!sentence.length) return; const t=sentText(); speak(t); addLog("me",t,sentence); };
+$("showMe").onclick=()=>{ if(!sentence.length) return; const t=sentText(); speak(t); addLog("me",t,sentence); openBig(sentence.filter(p=>p.e).map(p=>p.e).join(" "), t); };
+$("undoBtn").onclick=()=>{ sentence.pop(); renderSentence(); };
+$("clearMe").onclick=()=>{ sentence=[]; renderSentence(); };
+$("sosBtn").onclick=()=>{
+  const t="أرجوك ساعدني! أنا أصم ولا أستطيع السمع. أحتاج مساعدة عاجلة. اكتب لي على الهاتف.";
+  speak(t); addLog("me",t,[{e:"🆘"}]); openBig("🆘🧏", t, true);
+};
+
+/* ============ 6) شاشة العرض الكبيرة ============ */
+function openBig(e,t,sos){ $("bigStage").hidden=true; $("bigE").hidden=false; $("bigT").hidden=false;
+  $("big").classList.remove("storymode"); $("bigE").textContent=e; $("bigT").textContent=t; $("big").classList.toggle("sosmode",!!sos); $("big").classList.add("show"); }
+// شاشة كاملة لأمي: الصور فقط، تتكرر تلقائياً
+function openStory(scenes){ $("bigE").hidden=true; $("bigT").hidden=true; $("bigStage").hidden=false;
+  $("big").classList.remove("sosmode"); $("big").classList.add("show","storymode"); playStory($("bigStage"), scenes, true); }
+$("bigClose").onclick=()=>{ $("big").classList.remove("show"); clearInterval(timers.get($("bigStage"))); try{speechSynthesis.cancel();}catch(e){} };
+
+/* ============ 7) التبويبات والإعدادات ============ */
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===t));
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="v-"+t.dataset.v));
+  if (t.dataset.v==="history") renderLog();
+});
+let fs=1; try{ fs=parseFloat(localStorage.getItem("sila-fs"))||1; }catch(e){}
+const applyFs=()=>{ document.documentElement.style.setProperty("--fs",fs); try{localStorage.setItem("sila-fs",fs);}catch(e){} };
+$("fsUp").onclick=()=>{ fs=Math.min(1.6,fs+.1); applyFs(); };
+$("fsDown").onclick=()=>{ fs=Math.max(.8,fs-.1); applyFs(); };
+$("contrast").onclick=e=>{ const on=document.body.classList.toggle("contrast"); e.target.setAttribute("aria-pressed",on); };
+$("clearLog").onclick=()=>{ LOG=[]; saveLog(); renderLog(); };
+if ("speechSynthesis" in window) speechSynthesis.onvoiceschanged=()=>{};
+if (!SR) noticeMic("⚠️ متصفحك لا يدعم التعرف على الكلام. افتح التطبيق في <b>Google Chrome</b> أو <b>Edge</b>، أو اكتب الجملة يدوياً.");
+applyFs(); renderCats(); renderGrid(); renderLog(); updateKeyUI();
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
